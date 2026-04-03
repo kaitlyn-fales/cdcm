@@ -20,4 +20,8 @@ Imports:
     mcmcse,
     momentLS,
     posterior
+Additional_repositories:
+    https://stan-dev.r-universe.dev
+Remotes:
+    hsong1/momentLS
 URL: https://kaitlyn-fales.github.io/cdcm/
