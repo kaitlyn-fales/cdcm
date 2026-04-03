@@ -21,7 +21,7 @@ Imports:
     momentLS,
     posterior
 Additional_repositories:
-    https://stan-dev.r-universe.dev
+    https://stan-dev.r-universe.dev/builds
 Remotes:
     hsong1/momentLS
 URL: https://kaitlyn-fales.github.io/cdcm/
