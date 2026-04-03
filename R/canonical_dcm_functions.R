@@ -168,9 +168,14 @@ get_initial_vals <- function(mod, data, pathfinder_init = NULL, num_paths = 1){
 }
 
 # Function for running HMC NUTS sampler for warmup iterations and then sampling until convergence by multivariate ESS
-dcm_sample <- function(mod, data, inits_list, output_dir, basename, metric = c("dense_e","diag_e"),
+dcm_sample <- function(mod, data, inits_list, output_dir, basename, ess_check, metric = c("dense_e","diag_e"),
                        refresh = 100, warmup_iter = 5000, n_iter_chunk = 1000,
                        max_iter = 10^6, adapt_delta = 0.9, seed = 1234, chains = 1){
+
+  # Make sure ess_check is not empty
+  if (missing(ess_check)) {
+    stop("`ess_check` must be provided. It should reflect the required multivariate ESS for convergence.")
+  }
 
   # Running stan program to sample from posterior - initial warmup and starting to sample
   fit = mod$sample(
