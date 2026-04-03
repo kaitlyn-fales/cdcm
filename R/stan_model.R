@@ -5,7 +5,7 @@ stan_file <- function(name) {
 
 #' Path to the canonical DCM Stan program
 #'
-#' Returns the file path to the canonical Dynamic Causal Model (DCM)
+#' Returns the file path to the CDCM
 #' Stan program bundled with the \code{cdcm} package.
 #'
 #' This function is primarily intended for use with
@@ -16,12 +16,12 @@ stan_file <- function(name) {
 #'
 #' @examples
 #' \dontrun{
-#' stan_file <- canonical_dcm_stan_file()
+#' stan_file <- cdcm_stan_file()
 #' mod <- cmdstanr::cmdstan_model(stan_file)
 #' }
 #'
 #' @export
-canonical_dcm_stan_file <- function() {
+cdcm_stan_file <- function() {
   stan_file("canonical_dcm.stan")
 }
 
@@ -47,9 +47,9 @@ meta_analysis_stan_file <- function() {
   stan_file("meta_analysis.stan")
 }
 
-#' Compile the canonical DCM Stan model
+#' Compile the CDCM Stan model
 #'
-#' Compiles the canonical Dynamic Causal Model (DCM) Stan program bundled
+#' Compiles the CDCM Stan program bundled
 #' with the \code{cdcm} package using \code{cmdstanr}.
 #'
 #' This function provides a convenient interface for compiling the model
@@ -70,15 +70,15 @@ meta_analysis_stan_file <- function() {
 #'
 #' @examples
 #' \dontrun{
-#' mod <- compile_canonical_dcm()
+#' mod <- compile_cdcm()
 #'
 #' # Force recompilation if needed
-#' mod <- compile_canonical_dcm(force_recompile = TRUE)
+#' mod <- compile_cdcm(force_recompile = TRUE)
 #' }
 #'
 #' @export
-compile_canonical_dcm <- function(force_recompile = FALSE, quiet = TRUE, ...) {
-  stan_path <- canonical_dcm_stan_file()
+compile_cdcm <- function(force_recompile = FALSE, quiet = TRUE, ...) {
+  stan_path <- cdcm_stan_file()
 
   if (stan_path == "") {
     stop("Could not find 'canonical_dcm.stan' in the installed cdcm package.")
