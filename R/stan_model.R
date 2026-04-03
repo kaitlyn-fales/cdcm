@@ -25,7 +25,7 @@ cdcm_stan_file <- function() {
   stan_file("canonical_dcm.stan")
 }
 
-#' #' Path to the group-level meta-analysis Stan program
+#' Path to the group-level meta-analysis Stan program
 #'
 #' Returns the file path to the group-level meta analysis model
 #' Stan program bundled with the \code{cdcm} package.
