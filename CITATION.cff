@@ -1,0 +1,12 @@
+cff-version: 1.2.0
+message: "If you use this package, please cite it as below."
+title: "cdcm"
+type: software
+authors:
+  - family-names: "Fales"
+    given-names: "Kaitlyn"
+version: "0.1.0"
+date-released: 2026-04-03
+url: "https://github.com/kaitlyn-fales/cdcm"
+repository-code: "https://github.com/kaitlyn-fales/cdcm"
+license: "GPL-3.0"
