@@ -102,10 +102,12 @@ Additional models (e.g., multi-run meta-analysis) are planned.
 
 ---
 
-## Author
+## Citation
 
-Kaitlyn Fales
-PhD Candidate, Penn State University
+If you use `cdcm`, please cite the package in R with:
 
+```r
+citation("cdcm")
+```
 
 
