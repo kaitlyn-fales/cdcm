@@ -2,7 +2,7 @@
 % Please edit documentation in R/stan_model.R
 \name{meta_analysis_stan_file}
 \alias{meta_analysis_stan_file}
-\title{#' Path to the group-level meta-analysis Stan program}
+\title{Path to the group-level meta-analysis Stan program}
 \usage{
 meta_analysis_stan_file()
 }
