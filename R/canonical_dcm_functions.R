@@ -72,7 +72,35 @@ get_last_draws_for_init <- function(draws) {
   return(grouped_list)
 }
 
-# Function to structure list data into Stan input data for model
+#' Construct Stan data list for CDCM
+#'
+#' Prepares input data and model specification into the list format required
+#' for the canonical DCM Stan program. This includes time series data, stimulus
+#' inputs, connectivity structure indices, and hyperparameters.
+#'
+#' @param data A list containing:
+#' \itemize{
+#'   \item \code{times}: Numeric vector of time points (length T)
+#'   \item \code{u}: Matrix of stimulus inputs (T x n_u)
+#'   \item \code{y_obs}: Matrix of observed BOLD signals (T x m)
+#' }
+#' @param hypothesis_idxs A list specifying model structure:
+#' \itemize{
+#'   \item \code{A_idxs}: Matrix of indices for A matrix (connections)
+#'   \item \code{B_idxs}: Matrix of indices for B matrix (modulatory effects)
+#'   \item \code{C_idxs}: Matrix of indices for C matrix (inputs)
+#' }
+#' @param ode_solver_type Integer specifying ODE solver (default 1 is piecewise analytic solution)
+#' @param tol Numeric tolerance for ODE solver (default 1e-5, if using numeric CKRK integration)
+#' @param sigma_nu Prior scale for connectivity parameters
+#' @param sigma_nu_self Prior scale for self-connections in A and B
+#' @param rate_sigma Prior rate parameter for variance terms
+#' @param sigma_z0 Prior scale for initial neural states
+#' @param conv Integer flag for convolution option (default 1 convolves with canonical HRF - recommended to not change unless you want latent neural signal)
+#' @param max_num_steps Maximum number of ODE solver steps (for CKRK solver)
+#'
+#' @return A named list suitable for input to a Stan model.
+#' @export
 get_stan_dat <- function(data, hypothesis_idxs, ode_solver_type = 1, tol = 10^{-5},
                          sigma_nu = 1, sigma_nu_self = 0.125, rate_sigma = 0.5,
                          sigma_z0 = 0.3, conv = 1, max_num_steps = 10^6){
@@ -120,7 +148,22 @@ get_stan_dat <- function(data, hypothesis_idxs, ode_solver_type = 1, tol = 10^{-
   return(stan_dat)
 }
 
-# Function to get the number of parameters to estimate - used to calculate required ESS for convergence
+#' Compute number of model parameters
+#'
+#' Calculates the total number of parameters in the canonical DCM model,
+#' based on the dimensions of connectivity components and variance terms.
+#' This is primarily used to determine convergence thresholds (e.g., required ESS).
+#'
+#' @param data A list containing model dimensions:
+#' \itemize{
+#'   \item \code{d_A}: Number of A parameters
+#'   \item \code{d_B}: Number of B parameters
+#'   \item \code{d_C}: Number of C parameters
+#'   \item \code{m}: Number of regions (ROIs)
+#' }
+#'
+#' @return Integer representing total number of parameters.
+#' @export
 get_num_param <- function(data){
   num_nu <- data$d_A + data$d_B + data$d_C
   num_sigma_z0_beta <- 3*data$m
@@ -129,7 +172,18 @@ get_num_param <- function(data){
   return(num_param)
 }
 
-# Function for using variational Pathfinder to get initial values list, or specifying init = 0 for error
+#' Generate initial values using Pathfinder
+#'
+#' Uses CmdStanR's Pathfinder algorithm to obtain initial values for MCMC
+#' sampling. If Pathfinder fails, a fallback initialization is used.
+#'
+#' @param mod A CmdStanR model object.
+#' @param data A list of data formatted for Stan.
+#' @param pathfinder_init Optional named list of initial values for Pathfinder.
+#' @param num_paths Number of Pathfinder optimization paths (default 1).
+#'
+#' @return A list of initial values suitable for use in \code{mod$sample()}.
+#' @export
 get_initial_vals <- function(mod, data, pathfinder_init = NULL, num_paths = 1){
 
   if (is.null(pathfinder_init) == T) {pathfinder_init <- list(sigma = rep(1,data$m),
@@ -167,7 +221,34 @@ get_initial_vals <- function(mod, data, pathfinder_init = NULL, num_paths = 1){
   return(inits_list)
 }
 
-# Function for running HMC NUTS sampler for warmup iterations and then sampling until convergence by multivariate ESS
+#' Run MCMC sampling for canonical DCM with convergence checks
+#'
+#' Runs Hamiltonian Monte Carlo (NUTS) sampling using CmdStanR in chunks,
+#' continuing until a specified multivariate effective sample size (ESS)
+#' threshold is reached or a maximum number of iterations is exceeded.
+#'
+#' @param mod A CmdStanR model object.
+#' @param data A list of data formatted for Stan.
+#' @param inits_list Initial values for sampling.
+#' @param output_dir Directory for saving output files.
+#' @param basename Base name for saved output files.
+#' @param metric Metric type for HMC (\code{"dense_e"} or \code{"diag_e"}).
+#' @param refresh Frequency of sampler output.
+#' @param warmup_iter Number of warmup iterations.
+#' @param n_iter_chunk Number of sampling iterations per chunk.
+#' @param max_iter Maximum total number of iterations.
+#' @param adapt_delta Target acceptance probability.
+#' @param seed Random seed.
+#' @param chains Number of chains.
+#' @param ess_check Required multivariate effective sample size for convergence.
+#'
+#' @details
+#' Sampling proceeds in chunks, reusing the last draw as initialization for the
+#' next chunk. Convergence is assessed using multivariate ESS computed via
+#' \code{mcmcse}.
+#'
+#' @return Invisibly returns NULL. Sampling results and diagnostics are saved to disk.
+#' @export
 dcm_sample <- function(mod, data, inits_list, output_dir, basename, ess_check, metric = c("dense_e","diag_e"),
                        refresh = 100, warmup_iter = 5000, n_iter_chunk = 1000,
                        max_iter = 10^6, adapt_delta = 0.9, seed = 1234, chains = 1){
