@@ -1,4 +1,4 @@
-# cdcm
+# cdcm: Canonical Dynamic Causal Modeling
 
 An R package for Bayesian estimation of effective connectivity in task-based fMRI using Canonical Dynamic Causal Modeling (CDCM).
 
@@ -25,7 +25,7 @@ devtools::install_github("kaitlyn-fales/cdcm")
 ## Requirements
 
 * R (≥ 4.2 recommended)
-* [`cmdstanr`](https://mc-stan.org/cmdstanr/)
+* [`cmdstanr`](https://stan-dev.r-universe.dev/cmdstanr)
 * CmdStan (≥ 2.35)
 
 To install CmdStan:
