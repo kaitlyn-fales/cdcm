@@ -535,22 +535,7 @@ get_stan_dat <- function(data, hypothesis_idxs, ode_solver_type = 1, tol = 1e-5,
   return(stan_dat)
 }
 
-#' Compute number of model parameters
-#'
-#' Calculates the total number of parameters in the canonical DCM model,
-#' based on the dimensions of connectivity components and variance terms.
-#' This is primarily used to determine convergence thresholds (e.g., required ESS).
-#'
-#' @param data A list containing model dimensions:
-#' \itemize{
-#'   \item \code{d_A}: Number of A parameters
-#'   \item \code{d_B}: Number of B parameters
-#'   \item \code{d_C}: Number of C parameters
-#'   \item \code{m}: Number of regions (ROIs)
-#' }
-#'
-#' @return Integer representing total number of parameters.
-#' @export
+
 get_num_param <- function(data){
 
   required <- c("d_A", "d_B", "d_C", "m")
@@ -569,6 +554,50 @@ get_num_param <- function(data){
   num_param <- num_nu + num_sigma_z0_beta
 
   return(num_param)
+}
+
+
+#' Compute a minimum ESS threshold for CDCM sampling
+#'
+#' Computes the minimum effective sample size (ESS) threshold corresponding to a
+#' specified confidence level and relative precision, using the number of model
+#' parameters implied by a CDCM Stan data list.
+#'
+#' @param data A named list of data in the format required by the Stan model,
+#'   typically produced by \code{\link{get_stan_dat}}.
+#' @param alpha Significance level used in the \code{mcmcse::minESS()}
+#'   calculation. Defaults to \code{0.05}.
+#' @param eps Relative precision target used in the
+#'   \code{mcmcse::minESS()} calculation. Defaults to \code{0.05}.
+#'
+#' @details
+#' This function first determines the number of model parameters implied by the
+#' supplied Stan data list, then uses \code{mcmcse::minESS()} to compute the
+#' minimum effective sample size required to achieve the specified level
+#' \code{alpha} and relative precision \code{eps}.
+#'
+#' This can be used to define the \code{ess_check} argument in
+#' \code{\link{dcm_sample}}.
+#'
+#' @return A numeric scalar giving the minimum ESS threshold.
+#'
+#' @examples
+#' \dontrun{
+#' stan_dat <- get_stan_dat(data, hypothesis_idxs)
+#' ess_target <- minESS_criterion(stan_dat)
+#' }
+#'
+#' @export
+minESS_criterion <- function(data, alpha = 0.05, eps = 0.05){
+  # Determine number of model parameters
+  num_param <- get_num_param(data)
+
+  # Use number of parameters to determine minESS from mcmcse for specified level alpha and relative precision epsilon
+  ess_check <- mcmcse::minESS(num_param, alpha = alpha, eps = eps)
+
+  # Verify numeric
+  ess_check <- as.numeric(ess_check)
+  return(ess_check)
 }
 
 #' Generate initial values for CDCM posterior sampling
@@ -874,7 +903,7 @@ dcm_sample <- function(mod, data, inits_list, output_dir, basename, ess_check,
     draws = draws_df,
     diagnostics = all_diagnostics,
     converged = converged,
-    total_draws = total_draws
+    total_draws = total_draws + n_iter_chunk
   )))
 }
 
