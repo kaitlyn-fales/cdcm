@@ -129,10 +129,10 @@ citation("cdcm")
   : Sample from the CDCM posterior in checkpointed chunks
 - [`get_initial_vals()`](https://kaitlyn-fales.github.io/cdcm/reference/get_initial_vals.md)
   : Generate initial values for CDCM posterior sampling
-- [`get_num_param()`](https://kaitlyn-fales.github.io/cdcm/reference/get_num_param.md)
-  : Compute number of model parameters
 - [`get_stan_dat()`](https://kaitlyn-fales.github.io/cdcm/reference/get_stan_dat.md)
   : Construct a Stan data list for the CDCM model
 - [`meta_analysis_stan_file()`](https://kaitlyn-fales.github.io/cdcm/reference/meta_analysis_stan_file.md)
   : Path to the group-level meta-analysis Stan program
+- [`minESS_criterion()`](https://kaitlyn-fales.github.io/cdcm/reference/minESS_criterion.md)
+  : Compute a minimum ESS threshold for CDCM sampling
 

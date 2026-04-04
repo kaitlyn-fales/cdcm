@@ -106,7 +106,7 @@
 <span><span class="va">stan_dat</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/get_stan_dat.html">get_stan_dat</a></span><span class="op">(</span><span class="va">dat</span>, <span class="va">idxs</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Compute number of parameters for multivariate ESS convergence</span></span>
-<span><span class="va">num_param</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/get_num_param.html">get_num_param</a></span><span class="op">(</span><span class="va">stan_dat</span><span class="op">)</span></span>
+<span><span class="va">num_param</span> <span class="op">&lt;-</span> <span class="fu">get_num_param</span><span class="op">(</span><span class="va">stan_dat</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Convergence check specs - 95% HPD intervals with 5% tolerance</span></span>
 <span><span class="va">minESS_check</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="fu">mcmcse</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/mcmcse/man/minESS.html" class="external-link">minESS</a></span><span class="op">(</span><span class="va">num_param</span>, alpha <span class="op">=</span> <span class="fl">0.05</span>, eps <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span><span class="op">)</span></span>
