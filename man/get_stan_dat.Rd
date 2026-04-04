@@ -2,15 +2,13 @@
 % Please edit documentation in R/canonical_dcm_functions.R
 \name{get_stan_dat}
 \alias{get_stan_dat}
-\title{Construct Stan data list for CDCM}
+\title{Construct a Stan data list for the CDCM model}
 \usage{
 get_stan_dat(
   data,
   hypothesis_idxs,
   ode_solver_type = 1,
-  tol = 10^{
-     -5
- },
+  tol = 1e-05,
   sigma_nu = 1,
   sigma_nu_self = 0.125,
   rate_sigma = 0.5,
@@ -20,41 +18,68 @@ get_stan_dat(
 )
 }
 \arguments{
-\item{data}{A list containing:
+\item{data}{A list containing the observed time series and experimental
+design. It must contain:
 \itemize{
-\item \code{times}: Numeric vector of time points (length T)
-\item \code{u}: Matrix of stimulus inputs (T x n_u)
-\item \code{y_obs}: Matrix of observed BOLD signals (T x m)
+\item \code{times}: a numeric vector of observation times
+\item \code{u}: a \eqn{T \times n_u} matrix encoding the experimental
+stimulus inputs
+\item \code{y_obs}: a \eqn{T \times m} matrix of observed ROI-level BOLD
+signals
 }}
 
-\item{hypothesis_idxs}{A list specifying model structure:
+\item{hypothesis_idxs}{A list specifying the hypothesized nonzero entries of
+the connectivity matrices. It must contain:
 \itemize{
-\item \code{A_idxs}: Matrix of indices for A matrix (connections)
-\item \code{B_idxs}: Matrix of indices for B matrix (modulatory effects)
-\item \code{C_idxs}: Matrix of indices for C matrix (inputs)
+\item \code{A_idxs}: a 2-column matrix of \eqn{(i,j)} indices for the
+baseline connectivity matrix \eqn{A}
+\item \code{B_idxs}: a 3-column matrix of \eqn{(k,i,j)} indices for the
+modulatory matrices \eqn{B_k}, where \eqn{k} indexes the stimulus
+dimension
+\item \code{C_idxs}: a 2-column matrix of \eqn{(i,j)} indices for the
+driving-input matrix \eqn{C}
 }}
 
-\item{ode_solver_type}{Integer specifying ODE solver (default 1 is piecewise analytic solution)}
+\item{ode_solver_type}{Integer code specifying the ODE solver used in the
+Stan program (default = 1; piecewise analytic solution, faster than CKRK numeric integration = 0).}
 
-\item{tol}{Numeric tolerance for ODE solver (default 1e-5, if using numeric CKRK integration)}
+\item{tol}{Numeric tolerance used for both relative and absolute ODE solver
+tolerances (default = 1e-5; used for CKRK numeric integration).}
 
-\item{sigma_nu}{Prior scale for connectivity parameters}
+\item{sigma_nu}{Prior scale for off-diagonal neural connectivity parameters (default = 1).}
 
-\item{sigma_nu_self}{Prior scale for self-connections in A and B}
+\item{sigma_nu_self}{Prior scale for diagonal self-connectivity parameters (default = 0.125; tighter prior is needed).}
 
-\item{rate_sigma}{Prior rate parameter for variance terms}
+\item{rate_sigma}{Rate parameter for the prior on observation noise.}
 
-\item{sigma_z0}{Prior scale for initial neural states}
+\item{sigma_z0}{Prior scale for the initial neural state.}
 
-\item{conv}{Integer flag for convolution option (default 1 convolves with canonical HRF - recommended to not change unless you want latent neural signal)}
+\item{conv}{Integer indicator controlling whether convolution with the HRF is
+performed in the Stan model (default = 1; leave as-is unless you want latent z(t) instead of y(t)).}
 
-\item{max_num_steps}{Maximum number of ODE solver steps (for CKRK solver)}
+\item{max_num_steps}{Maximum number of ODE solver steps allowed (default = 10^6; CKRK numeric solver only).}
 }
 \value{
-A named list suitable for input to a Stan model.
+A named list containing the data, dimensions, changepoint structure,
+hypothesis index matrices, prior hyperparameters, and solver settings
+required by the CDCM Stan program.
 }
 \description{
-Prepares input data and model specification into the list format required
-for the canonical DCM Stan program. This includes time series data, stimulus
-inputs, connectivity structure indices, and hyperparameters.
+Prepares the input data and hypothesis indexing structures required by the
+CDCM Stan program.
+}
+\details{
+This function validates the structure of the supplied data and hypothesis
+index objects, computes changepoints in the experimental design, and returns
+a named list in the format required by the CDCM Stan model.
+
+In addition, the function evaluates a set of design
+diagnostics via \code{\link{check_design_identifiability}}. If those
+sufficient conditions are not satisfied, a warning is issued. This warning is
+intended as a practical diagnostic only: failure to satisfy these conditions
+does not necessarily imply non-identifiability, but it may indicate that the
+design is weak for reliable estimation.
+
+The returned Stan data list can be used for either single-chain or
+multi-chain sampling. Its structure does not depend on the number of chains.
 }

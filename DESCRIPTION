@@ -19,7 +19,8 @@ Imports:
     magrittr,
     mcmcse,
     momentLS,
-    posterior
+    posterior,
+    rlang
 Additional_repositories:
     https://stan-dev.r-universe.dev
 Remotes:

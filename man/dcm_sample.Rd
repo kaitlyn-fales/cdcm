@@ -2,7 +2,7 @@
 % Please edit documentation in R/canonical_dcm_functions.R
 \name{dcm_sample}
 \alias{dcm_sample}
-\title{Run MCMC sampling for canonical DCM with convergence checks}
+\title{Sample from the CDCM posterior in checkpointed chunks}
 \usage{
 dcm_sample(
   mod,
@@ -11,55 +11,126 @@ dcm_sample(
   output_dir,
   basename,
   ess_check,
-  metric = c("dense_e", "diag_e"),
   refresh = 100,
   warmup_iter = 5000,
   n_iter_chunk = 1000,
   max_iter = 10^6,
   adapt_delta = 0.9,
-  seed = 1234,
-  chains = 1
+  seed = 1234
 )
 }
 \arguments{
-\item{mod}{A CmdStanR model object.}
+\item{mod}{A compiled CmdStanR model object, typically returned by
+\code{\link{compile_cdcm}}.}
 
-\item{data}{A list of data formatted for Stan.}
+\item{data}{A named list of data in the format required by the Stan model,
+typically produced by \code{\link{get_stan_dat}}.}
 
-\item{inits_list}{Initial values for sampling.}
+\item{inits_list}{A named list of initial values for model parameters,
+typically produced by \code{\link{get_initial_vals}}.}
 
-\item{output_dir}{Directory for saving output files.}
+\item{output_dir}{Character string giving the directory where checkpointed
+posterior draws and diagnostics should be saved.}
 
-\item{basename}{Base name for saved output files.}
+\item{basename}{Character string used as the base filename for saved output
+files.}
 
-\item{ess_check}{Required multivariate effective sample size for convergence.}
+\item{ess_check}{Numeric scalar giving the target multivariate ESS used for
+convergence assessment.}
 
-\item{metric}{Metric type for HMC (\code{"dense_e"} or \code{"diag_e"}).}
+\item{refresh}{Integer giving the sampling progress refresh rate passed to
+CmdStanR.}
 
-\item{refresh}{Frequency of sampler output.}
+\item{warmup_iter}{Integer giving the number of warmup iterations for the
+initial sampling phase.}
 
-\item{warmup_iter}{Number of warmup iterations.}
+\item{n_iter_chunk}{Integer giving the number of post-warmup sampling
+iterations to run per chunk.}
 
-\item{n_iter_chunk}{Number of sampling iterations per chunk.}
+\item{max_iter}{Integer giving the maximum total number of post-warmup draws
+allowed across all chunks.}
 
-\item{max_iter}{Maximum total number of iterations.}
+\item{adapt_delta}{Numeric target acceptance rate passed to CmdStanR.}
 
-\item{adapt_delta}{Target acceptance probability.}
-
-\item{seed}{Random seed.}
-
-\item{chains}{Number of chains.}
+\item{seed}{Integer random seed for reproducibility.}
 }
 \value{
-Invisibly returns NULL. Sampling results and diagnostics are saved to disk.
+Invisibly returns a list with elements:
+\describe{
+\item{draws}{A data frame containing the combined posterior draws across
+all completed sampling chunks.}
+\item{diagnostics}{A list of NUTS diagnostics for each completed sampling
+chunk.}
+\item{converged}{Logical indicating whether the ESS-based convergence
+criterion was satisfied.}
+\item{total_draws}{Total number of post-warmup draws generated across all
+completed chunks.}
+}
+
+If sampling is interrupted before the function completes, checkpointed draws
+and diagnostics saved to disk remain available, but no final return object is
+produced.
 }
 \description{
-Runs Hamiltonian Monte Carlo (NUTS) sampling using CmdStanR in chunks,
-continuing until a specified multivariate effective sample size (ESS)
-threshold is reached or a maximum number of iterations is exceeded.
+Runs posterior sampling for a compiled CDCM model in sequential chunks,
+saving intermediate results to disk after each chunk and stopping when a
+target multivariate effective sample size (ESS) is reached or a maximum
+iteration limit is exceeded.
 }
 \details{
-Sampling proceeds in chunks, reusing the last draw as initialization for the
-next chunk. Convergence is assessed using multivariate ESS computed via
-\code{mcmcse}.
+This function is designed for checkpointed \strong{single-chain} sampling and is
+especially useful for long runs on HPC systems, where jobs may need to stop
+at walltime limits. For standard multi-chain sampling, use the compiled
+CmdStanR model directly via \code{mod$sample()}.
+
+Sampling begins with an initial warmup phase, followed by posterior sampling
+in chunks. After the first chunk, the last draw is used as the initial value
+for the next chunk, and the adapted step size and inverse metric from the
+previous fit are reused so that sampling can continue efficiently without
+repeating warmup.
+
+After each completed chunk, posterior draws and NUTS diagnostics are saved to
+disk in \code{output_dir} using filenames based on \code{basename}. This
+checkpointing allows intermediate results to be recovered if sampling is
+interrupted, for example due to HPC walltime limits.
+
+Convergence is assessed using the multivariate effective sample size (ESS),
+computed via \code{mcmcse}, on the accumulated single-chain posterior draws.
+Sampling continues until the target ESS specified by \code{ess_check} is
+reached or the maximum number of iterations is exceeded.
+
+This function is intentionally restricted to \strong{single-chain} sampling.
+Its checkpointing logic, reuse of the last draw as initialization, reuse of
+the adapted inverse metric and step size, and ESS calculation are all based
+on a single continuing chain. If multiple chains are desired, users should
+call the underlying CmdStanR sampler directly via \code{mod$sample()} (or the
+compiled model object's \code{$sample()} method), specifying their preferred
+number of chains and parallelization settings. In that case, the checkpointed
+chunkwise workflow implemented here is not used.
 }
+\section{Multi-chain sampling}{
+
+For standard multi-chain posterior sampling, call the compiled CmdStanR model
+directly rather than using \code{dcm_sample()}. For example:
+
+\preformatted{
+mod <- compile_cdcm()
+stan_dat <- get_stan_dat(data, hypothesis_idxs)
+init_list <- get_initial_vals(mod, stan_dat)
+
+fit <- mod$sample(
+  data = stan_dat,
+  init = init_list,
+  chains = 4,
+  parallel_chains = 4,
+  iter_warmup = 1000,
+  iter_sampling = 1000,
+  seed = 1234
+)
+}
+
+This approach provides standard multi-chain CmdStanR sampling, but does not
+include the checkpointing or chunkwise ESS-based stopping rule implemented in
+\code{dcm_sample()}.
+}
+

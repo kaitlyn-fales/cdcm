@@ -2,6 +2,7 @@
 
 export("%>%")
 export(cdcm_stan_file)
+export(check_design_identifiability)
 export(compile_cdcm)
 export(compile_meta_analysis)
 export(dcm_sample)
@@ -10,3 +11,4 @@ export(get_num_param)
 export(get_stan_dat)
 export(meta_analysis_stan_file)
 importFrom(magrittr,"%>%")
+importFrom(rlang,.data)
