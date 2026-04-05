@@ -21,3 +21,5 @@
   : Path to the group-level meta-analysis Stan program
 - [`minESS_criterion()`](https://kaitlyn-fales.github.io/cdcm/reference/minESS_criterion.md)
   : Compute a minimum ESS threshold for CDCM sampling
+- [`simulate_cdcm()`](https://kaitlyn-fales.github.io/cdcm/reference/simulate_cdcm.md)
+  : Simulate fMRI time series under CDCM

@@ -7,6 +7,7 @@ task-based fMRI using Canonical Dynamic Causal Modeling (CDCM).
 
 `cdcm` provides tools for:
 
+- Simulating fMRI time series under the CDCM framework
 - Constructing Stan data for CDCM models
 - Running efficient MCMC sampling via CmdStanR
 - Generating initialization using Pathfinder
@@ -20,8 +21,6 @@ task-based fMRI using Canonical Dynamic Causal Modeling (CDCM).
 # Install from GitHub
 devtools::install_github("kaitlyn-fales/cdcm")
 ```
-
-------------------------------------------------------------------------
 
 ## Requirements
 
@@ -42,42 +41,62 @@ cmdstanr::install_cmdstan()
 ``` r
 library(cdcm)
 
+# Define true connectivity parameters 
+nu <- list(
+  nu_A = c(0.4, 0.3, -0.1, 0.15),
+  nu_B = c(-0.2),
+  nu_C = c(0.7)
+)
+
+# Specify model structure 
+idxs <- list(
+  A_idxs = matrix(c(2,1,
+                    1,2,
+                    1,1,
+                    2,2), byrow = TRUE, ncol = 2),
+  B_idxs = matrix(c(1,2,1), byrow = TRUE, ncol = 3),
+  C_idxs = matrix(c(1,1), byrow = TRUE, ncol = 2)
+)
+
+# Simple block design with a single stimulus
+U <- matrix(rep(c(rep(0,5),rep(1,5)), 10), ncol = 1)
+
+# Simulate data
+sim <- simulate_cdcm(
+  nu = nu,
+  hypothesis_idxs = idxs,
+  nscan = 100,
+  m = 2,
+  n_u = 1,
+  TR = 2,
+  U = U,
+  SNR = 3,
+  seed = 123
+)
+
+dat <- sim$simulated_data
+
 # Compile model
 mod <- compile_cdcm()
-
-# Load preprocessed data - preprocessing functions to come in later versions
-# Preprocessed data should be a list with the named elements: dat$times, dat$u, dat$y_obs
-load("preprocessed_data.RData")
-
-# Set up hypotheses - indices for where to estimate parameters in A, B, C
-idxs = list(A_idxs = matrix(c(2,1,
-                              1,2,
-                              1,1,
-                              2,2), byrow = T, ncol=2),
-            B_idxs = matrix(c(2,1,2), byrow=T, ncol = 3),
-            C_idxs = matrix(c(1,1), byrow=T, ncol=2))
 
 # Prepare data
 stan_dat <- get_stan_dat(dat, idxs)
 
-# Compute number of parameters for multivariate ESS convergence
-num_param <- get_num_param(stan_dat)
-
-# Convergence check specs - 95% HPD intervals with 5% tolerance
-minESS_check <- as.numeric(mcmcse::minESS(num_param, alpha = 0.05, eps = 0.05))
+# Convergence criterion - Multivariate ESS (95% HPD, 5% tolerance)
+minESS_check <- minESS_criterion(stan_dat, alpha = 0.05, eps = 0.05)
 
 # Initialize via Pathfinder
 init <- get_initial_vals(mod, stan_dat)
 
-# Run sampling
-dcm_sample(
+# Run sampling until multivariate ESS convergence
+dir.create("Output", showWarnings = FALSE)
+fit <- dcm_sample(
   mod = mod,
   data = stan_dat,
   inits_list = init,
   output_dir = "Output",
   basename = "cdcm_fit",
   ess_check = minESS_check,
-  metric = "dense_e"
 )
 ```
 
@@ -135,4 +154,6 @@ citation("cdcm")
   : Path to the group-level meta-analysis Stan program
 - [`minESS_criterion()`](https://kaitlyn-fales.github.io/cdcm/reference/minESS_criterion.md)
   : Compute a minimum ESS threshold for CDCM sampling
+- [`simulate_cdcm()`](https://kaitlyn-fales.github.io/cdcm/reference/simulate_cdcm.md)
+  : Simulate fMRI time series under CDCM
 

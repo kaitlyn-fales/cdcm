@@ -53,6 +53,7 @@
 </h2>
 <p><code>cdcm</code> provides tools for:</p>
 <ul>
+<li>Simulating fMRI time series under the CDCM framework</li>
 <li>Constructing Stan data for CDCM models</li>
 <li>Running efficient MCMC sampling via CmdStanR</li>
 <li>Generating initialization using Pathfinder</li>
@@ -66,7 +67,6 @@
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Install from GitHub</span></span>
 <span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"kaitlyn-fales/cdcm"</span><span class="op">)</span></span></code></pre></div>
-<hr>
 </div>
 <div class="section level2">
 <h2 id="requirements">Requirements<a class="anchor" aria-label="anchor" href="#requirements"></a>
@@ -87,42 +87,62 @@
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://kaitlyn-fales.github.io/cdcm/">cdcm</a></span><span class="op">)</span></span>
 <span></span>
+<span><span class="co"># Define true connectivity parameters </span></span>
+<span><span class="va">nu</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>  nu_A <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.4</span>, <span class="fl">0.3</span>, <span class="op">-</span><span class="fl">0.1</span>, <span class="fl">0.15</span><span class="op">)</span>,</span>
+<span>  nu_B <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">0.2</span><span class="op">)</span>,</span>
+<span>  nu_C <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.7</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Specify model structure </span></span>
+<span><span class="va">idxs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>  A_idxs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>,<span class="fl">1</span>,</span>
+<span>                    <span class="fl">1</span>,<span class="fl">2</span>,</span>
+<span>                    <span class="fl">1</span>,<span class="fl">1</span>,</span>
+<span>                    <span class="fl">2</span>,<span class="fl">2</span><span class="op">)</span>, byrow <span class="op">=</span> <span class="cn">TRUE</span>, ncol <span class="op">=</span> <span class="fl">2</span><span class="op">)</span>,</span>
+<span>  B_idxs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">2</span>,<span class="fl">1</span><span class="op">)</span>, byrow <span class="op">=</span> <span class="cn">TRUE</span>, ncol <span class="op">=</span> <span class="fl">3</span><span class="op">)</span>,</span>
+<span>  C_idxs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">1</span><span class="op">)</span>, byrow <span class="op">=</span> <span class="cn">TRUE</span>, ncol <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Simple block design with a single stimulus</span></span>
+<span><span class="va">U</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">5</span><span class="op">)</span>,<span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">5</span><span class="op">)</span><span class="op">)</span>, <span class="fl">10</span><span class="op">)</span>, ncol <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Simulate data</span></span>
+<span><span class="va">sim</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/simulate_cdcm.html">simulate_cdcm</a></span><span class="op">(</span></span>
+<span>  nu <span class="op">=</span> <span class="va">nu</span>,</span>
+<span>  hypothesis_idxs <span class="op">=</span> <span class="va">idxs</span>,</span>
+<span>  nscan <span class="op">=</span> <span class="fl">100</span>,</span>
+<span>  m <span class="op">=</span> <span class="fl">2</span>,</span>
+<span>  n_u <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  TR <span class="op">=</span> <span class="fl">2</span>,</span>
+<span>  U <span class="op">=</span> <span class="va">U</span>,</span>
+<span>  SNR <span class="op">=</span> <span class="fl">3</span>,</span>
+<span>  seed <span class="op">=</span> <span class="fl">123</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">dat</span> <span class="op">&lt;-</span> <span class="va">sim</span><span class="op">$</span><span class="va">simulated_data</span></span>
+<span></span>
 <span><span class="co"># Compile model</span></span>
 <span><span class="va">mod</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/compile_cdcm.html">compile_cdcm</a></span><span class="op">(</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Load preprocessed data - preprocessing functions to come in later versions</span></span>
-<span><span class="co"># Preprocessed data should be a list with the named elements: dat$times, dat$u, dat$y_obs</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/load.html" class="external-link">load</a></span><span class="op">(</span><span class="st">"preprocessed_data.RData"</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Set up hypotheses - indices for where to estimate parameters in A, B, C</span></span>
-<span><span class="va">idxs</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>A_idxs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>,<span class="fl">1</span>,</span>
-<span>                              <span class="fl">1</span>,<span class="fl">2</span>,</span>
-<span>                              <span class="fl">1</span>,<span class="fl">1</span>,</span>
-<span>                              <span class="fl">2</span>,<span class="fl">2</span><span class="op">)</span>, byrow <span class="op">=</span> <span class="cn">T</span>, ncol<span class="op">=</span><span class="fl">2</span><span class="op">)</span>,</span>
-<span>            B_idxs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>,<span class="fl">1</span>,<span class="fl">2</span><span class="op">)</span>, byrow<span class="op">=</span><span class="cn">T</span>, ncol <span class="op">=</span> <span class="fl">3</span><span class="op">)</span>,</span>
-<span>            C_idxs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">1</span><span class="op">)</span>, byrow<span class="op">=</span><span class="cn">T</span>, ncol<span class="op">=</span><span class="fl">2</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Prepare data</span></span>
 <span><span class="va">stan_dat</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/get_stan_dat.html">get_stan_dat</a></span><span class="op">(</span><span class="va">dat</span>, <span class="va">idxs</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Compute number of parameters for multivariate ESS convergence</span></span>
-<span><span class="va">num_param</span> <span class="op">&lt;-</span> <span class="fu">get_num_param</span><span class="op">(</span><span class="va">stan_dat</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Convergence check specs - 95% HPD intervals with 5% tolerance</span></span>
-<span><span class="va">minESS_check</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="fu">mcmcse</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/mcmcse/man/minESS.html" class="external-link">minESS</a></span><span class="op">(</span><span class="va">num_param</span>, alpha <span class="op">=</span> <span class="fl">0.05</span>, eps <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co"># Convergence criterion - Multivariate ESS (95% HPD, 5% tolerance)</span></span>
+<span><span class="va">minESS_check</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/minESS_criterion.html">minESS_criterion</a></span><span class="op">(</span><span class="va">stan_dat</span>, alpha <span class="op">=</span> <span class="fl">0.05</span>, eps <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Initialize via Pathfinder</span></span>
 <span><span class="va">init</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/get_initial_vals.html">get_initial_vals</a></span><span class="op">(</span><span class="va">mod</span>, <span class="va">stan_dat</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Run sampling</span></span>
-<span><span class="fu"><a href="reference/dcm_sample.html">dcm_sample</a></span><span class="op">(</span></span>
+<span><span class="co"># Run sampling until multivariate ESS convergence</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/files2.html" class="external-link">dir.create</a></span><span class="op">(</span><span class="st">"Output"</span>, showWarnings <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/dcm_sample.html">dcm_sample</a></span><span class="op">(</span></span>
 <span>  mod <span class="op">=</span> <span class="va">mod</span>,</span>
 <span>  data <span class="op">=</span> <span class="va">stan_dat</span>,</span>
 <span>  inits_list <span class="op">=</span> <span class="va">init</span>,</span>
 <span>  output_dir <span class="op">=</span> <span class="st">"Output"</span>,</span>
 <span>  basename <span class="op">=</span> <span class="st">"cdcm_fit"</span>,</span>
 <span>  ess_check <span class="op">=</span> <span class="va">minESS_check</span>,</span>
-<span>  metric <span class="op">=</span> <span class="st">"dense_e"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <hr>
 </div>
