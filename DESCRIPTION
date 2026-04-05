@@ -15,12 +15,15 @@ Config/testthat/edition: 3
 Imports: 
     bayesplot,
     cmdstanr,
+    deSolve,
     dplyr,
+    expm,
     magrittr,
     mcmcse,
     momentLS,
     posterior,
-    rlang
+    rlang,
+    stats
 Additional_repositories:
     https://stan-dev.r-universe.dev
 Remotes:
