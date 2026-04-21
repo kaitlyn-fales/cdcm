@@ -6,15 +6,15 @@ functions {
     array[] matrix B,
     matrix C,
     vector tp_vec,
-    matrix u){  
-    
+    matrix u){
+
     int m = num_elements(y);
     int n_u = cols(C);
-    
+
     vector[m] dydt;
     vector[n_u] u_t;
     matrix[m,m] B_all = rep_matrix(0,m,m);
-    
+
     for(i in 1:n_u){
       u_t[i] = constant_interpolation(t,tp_vec,u[,i]);
       B_all += u_t[i]*B[i];
@@ -23,7 +23,7 @@ functions {
     dydt = (A+B_all)*y + C*u_t;
     return dydt;
   }
-  
+
   vector convolve(vector a, vector b) {
     int na = num_elements(a);       // Vector lengths
     int nb = num_elements(b);
@@ -38,7 +38,7 @@ functions {
     // Perform zero padding
     a_pad[1 : n_zero_a] = rep_vector(0, n_zero_a);
     b_rev_pad[(nb + 1) : (nb + n_zero_b)] = rep_vector(0, n_zero_b);
-    
+
     // Fill in padded vector
     a_pad[(n_zero_a + 1) : (na + n_zero_a)] = a;
     b_rev_pad[1 : nb] = b_rev;
@@ -46,7 +46,7 @@ functions {
      // Stan automatically scales the inverse FFT, so no rescaling needed
     return get_real(inv_fft(fft(a_pad) .* conj(fft(b_rev_pad))));
   }
-  
+
   // Function for evaluating numeric solution
   array[] vector numeric_sol(int T, int m, vector z0, array[] real tp, data real rel_tol,
                              data real abs_tol, int max_num_steps, matrix A, array[] matrix B,
@@ -54,31 +54,31 @@ functions {
     array[T] vector[m] ans;
     ans = ode_ckrk_tol(linear, z0, 0, tp, rel_tol, abs_tol, max_num_steps, A,B,C,tp_vec,u);
     return ans;
-    
-    
+
+
   }
-    
+
   vector stan_convolve(int nPoints, vector a,  vector b) {
     vector [nPoints] out;
     vector [nPoints] b_rev;
-    
+
     b_rev = reverse(b);
-    
-    for(i in 1:nPoints)  
+
+    for(i in 1:nPoints)
       out[i] = dot_product(head(a, i), tail(b_rev, i));
-   
+
     return(out);
   }
-  
+
   array[] vector HRF_mu(array[] vector mu, vector tp)
   {
     int m = num_elements(mu[1,]); // number of states
     int T = num_elements(mu[,1]); // number of time points
-    
-    
-    vector[T] HRF_tp; 
+
+
+    vector[T] HRF_tp;
     array[T] vector[m] HRF_mu_v;
-    
+
     // HRF(t) evaluated at t in ts
     for (t in 1:T){
       if(tp[t] == 0){
@@ -93,7 +93,7 @@ functions {
     }
     return HRF_mu_v;
   }
-  
+
   real linear_interpolation(real x0, vector x, vector y){
     // assume x is sorted
     real ans;
@@ -103,21 +103,21 @@ functions {
     if(x0 <= x[1]){ans = y[1];
     }else if(x0 >= x[N]){ans = y[N];
     }else{
-      vector[N] deltas = x0 - x; // positive -> negative 
+      vector[N] deltas = x0 - x; // positive -> negative
       i=0;
       for(n in 1:N){
         if(deltas[n]>=0){i+=1;}else{break;}
       }
-      
+
       //print(i);
-      
+
       ans = y[i] + (y[i+1]-y[i])/(x[i+1]-x[i])* (x0-x[i]);
     }
-    
-    
+
+
     return ans;
   }
-  
+
   real constant_interpolation(real x0, vector x, vector y){
     // assume x is sorted
     real ans;
@@ -127,30 +127,30 @@ functions {
     if(x0 <= x[1]){ans = y[1];
     }else if(x0 >= x[N]){ans = y[N];
     }else{
-      vector[N] deltas = x0 - x; // positive -> negative 
+      vector[N] deltas = x0 - x; // positive -> negative
       i=0;
       for(n in 1:N){
         if(deltas[n]>=0){i+=1;}else{break;}
       }
-      
+
       //print(i);
-      
+
       ans = y[i];
     }
-    
-    
+
+
     return ans;
   }
-  
+
   // Function for evaluating ODE solution under scenario A
-  vector eval_u_a(int i, vector y, matrix A, vector tp_vec, 
+  vector eval_u_a(int i, vector y, matrix A, vector tp_vec,
                       int prev_index, int m){
     matrix[m,m] A0 = A;
-    vector[m] result;  
+    vector[m] result;
     result = (matrix_exp(A0*(tp_vec[i]-tp_vec[prev_index]))*y);
     return result;
   }
-  
+
   // Function for evaluating ODE solution under scenario B
   vector eval_u_b(int i, vector y, matrix A, array[] matrix B, matrix C,
                       vector tp_vec, matrix u, int prev_index, int m){
@@ -169,29 +169,29 @@ functions {
     result = (matrix_exp(A0*(tp_vec[i]-tp_vec[prev_index]))*(y-ystar)+ystar);
     return result;
   }
-  
+
   // Function for evaluating piecewise analytic solution
-  array[] vector analytic_sol(vector z0, matrix A, array[] matrix B, matrix C, 
+  array[] vector analytic_sol(vector z0, matrix A, array[] matrix B, matrix C,
                       vector tp_vec, matrix u, int m, int n_u, int n_changes,
                       array[] int change_pts){
-  
+
     array[num_elements(tp_vec)] vector[m] ans;
     array[num_elements(tp_vec)+1] vector[m] sol;
     sol[1] = z0;
-    
+
     vector[num_elements(tp_vec)+1] tp_vec_pad;
     tp_vec_pad = append_row(0,tp_vec);
-    
+
     matrix[num_elements(tp_vec)+1,n_u] u_pad;
-    u_pad = append_row(rep_row_vector(0,n_u),u);
-  
+    u_pad = append_row(u[1], u);
+
     int prev_index = 1;
     int index;
-  
+
     for (i in 1:n_changes){
-  
+
       index = change_pts[i];
-  
+
       if (sum(u_pad[index-1,]) == 0){
         for (j in (prev_index+1):index) {
           sol[j] = eval_u_a(j,sol[prev_index],A,tp_vec_pad,prev_index,m);
@@ -201,16 +201,16 @@ functions {
                 sol[j] = eval_u_b(j,sol[prev_index],A,B,C,tp_vec_pad,u_pad,prev_index,m);
               }
             }
-  
-      prev_index = index; 
-      
-      
-  
+
+      prev_index = index;
+
+
+
     }
     ans = tail(sol, num_elements(tp_vec));
     return ans;
   }
-  
+
 }
 
 
@@ -253,23 +253,23 @@ parameters {
   vector[m] beta;
 }
 
-transformed parameters { 
+transformed parameters {
   // vector[m2] theta; // parameter
   // https://mc-stan.org/docs/functions-reference/diagonal-matrix-functions.html
-  
+
 }
 
 model {
   matrix[m,m] A = rep_matrix(0,m,m);
   array[n_u] matrix[m,m] B;
   matrix[m,n_u] C = rep_matrix(0,m,n_u);
-  
+
   profile("parameter"){
     // A matrix
   for(i in 1:d_A){
     A[A_idxs[i,1], A_idxs[i,2]] = nu_A[i];
   }
-  for (k in 1:m) { 
+  for (k in 1:m) {
       A[k, k] = -0.5 * exp(A[k, k]);
     }
 
@@ -282,14 +282,14 @@ model {
     int k = B_idxs[i,1];
     B[k][B_idxs[i,2],B_idxs[i,3]] = nu_B[i];
   }
-  
+
   // C matrix
   for(i in 1:d_C){
     C[C_idxs[i,1], C_idxs[i,2]] = nu_C[i];
   }
   }
-  
-  
+
+
   array[T] vector[m] mu;
   profile("ode"){
     //function linear
@@ -306,7 +306,7 @@ model {
 
   }
   array[T] vector[m] HRF_mu_v;
-  
+
   //print("mu_1:", mu[,1]);
   //print("HRF_mu_1", HRF_mu_v[,1]);
   if(conv==0){
@@ -315,16 +315,16 @@ model {
     profile("HRV_conv"){
       HRF_mu_v = HRF_mu(mu, tp_vec);
     }
-    
+
   }
-  
-  
+
+
   // prior on parameters
   profile("prior"){
-    
+
   sigma ~ exponential(rate_sigma);
   nu_A ~ normal(0,sigma_nu);
-  
+
   // A: Separate priors based on self connections or not
   for(i in 1:d_A){
     int r = A_idxs[i,1];
@@ -334,7 +334,7 @@ model {
       nu_A[i] ~ normal(0, sigma_nu_self);  // tight prior
     } else {
       // Off-diagonal
-      nu_A[i] ~ normal(0, sigma_nu); 
+      nu_A[i] ~ normal(0, sigma_nu);
     }
   }
   // B: Separate priors based on self connections or not
@@ -348,15 +348,15 @@ model {
     nu_B[i] ~ normal(0, sigma_nu);
   }
   }
-  
+
   nu_C ~ normal(0,sigma_nu);
   z0 ~ normal(0,sigma_z0);
   beta ~ normal(0, 1);
-   
+
   }
   profile("likelihood"){
   // likelihood
-  
+
   for (t in 1:T) {
       y_obs[t] ~ normal(HRF_mu_v[t] + beta, sigma);
   }
@@ -364,7 +364,7 @@ model {
 }
 
 
- 
+
 
 
 

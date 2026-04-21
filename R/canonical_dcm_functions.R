@@ -503,7 +503,7 @@ get_stan_dat <- function(data, hypothesis_idxs, ode_solver_type = 1, tol = 1e-5,
   }
 
   # Obtain dataframe of changes based on input
-  input <- rbind(0,data$u)
+  input <- rbind(data$u[1,], data$u)
   changes <- get_changepoints(input)
 
   # Getting data in proper list structure for stan program
