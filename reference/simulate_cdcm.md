@@ -81,7 +81,13 @@ simulate_cdcm(
 
 - SNR:
 
-  Signal-to-noise ratio for additive Gaussian noise.
+  Numeric. Signal-to-noise ratio for additive Gaussian noise, defined as
+  the ratio of the standard deviation of the signal to that of the noise
+  (i.e., \\\mathrm{SNR} = \mathrm{sd}(\text{signal}) /
+  \mathrm{sd}(\text{noise})\\). Noise is generated such that
+  \\\mathrm{sd}(\text{noise}) = \mathrm{sd}(\text{signal}) /
+  \mathrm{SNR}\\, implying a noise variance of \\\sigma^2 =
+  \mathrm{Var}(\text{signal}) / \mathrm{SNR}^2\\. Must be positive.
 
 - reparam:
 
