@@ -335,8 +335,12 @@ add_noise <- function(y_conv,times,SNR,seed = NULL){
   # Add Gaussian noise
   for (j in 1:m){
     set.seed(seed[j])
-    variance[j] <- (stats::var(y_conv[,j])+(mean(y_conv[,j]))^2)/SNR
-    y_obs[,j] <- y_conv[,j] + stats::rnorm(length(times)-1, mean = 0, sd = sqrt(variance[j]))
+
+    # SNR is defined as sd(signal) / sd(noise)
+    variance[j] <- stats::var(y_conv[, j]) / SNR^2
+
+    y_obs[, j] <- y_conv[, j] +
+      stats::rnorm(length(times) - 1, mean = 0, sd = sqrt(variance[j]))
   }
   return(y_obs)
 }
