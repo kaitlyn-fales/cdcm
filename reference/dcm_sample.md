@@ -149,6 +149,7 @@ here is not used.
 For standard multi-chain posterior sampling, call the compiled CmdStanR
 model directly rather than using `dcm_sample()`. For example:
 
+
     mod <- compile_cdcm()
     stan_dat <- get_stan_dat(data, hypothesis_idxs)
     init_list <- get_initial_vals(mod, stan_dat)

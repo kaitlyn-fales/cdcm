@@ -18,6 +18,7 @@ task-based fMRI using Canonical Dynamic Causal Modeling (CDCM).
 ## Installation
 
 ``` r
+
 # Install from GitHub
 devtools::install_github("kaitlyn-fales/cdcm")
 ```
@@ -31,6 +32,7 @@ devtools::install_github("kaitlyn-fales/cdcm")
 To install CmdStan:
 
 ``` r
+
 cmdstanr::install_cmdstan()
 ```
 
@@ -39,6 +41,7 @@ cmdstanr::install_cmdstan()
 ## Example Workflow
 
 ``` r
+
 library(cdcm)
 
 # Define true connectivity parameters 
@@ -118,6 +121,7 @@ Additional models (e.g., multi-run meta-analysis) are planned.
 - Recompilation may be required when updating CmdStan:
 
   ``` r
+
   compile_cdcm(force_recompile = TRUE)
   ```
 
@@ -128,5 +132,6 @@ Additional models (e.g., multi-run meta-analysis) are planned.
 If you use `cdcm`, please cite the package in R with:
 
 ``` r
+
 citation("cdcm")
 ```
