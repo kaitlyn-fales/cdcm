@@ -97,19 +97,23 @@ get_block_lengths <- function(input) {
 #' observations, where \eqn{d} is the number of ROIs and \eqn{m} is the number
 #' of stimulus inputs.
 #'
-#' Assumption (A2) is checked by forming the augmented block-level stimulus matrix
-#' from the blocks satisfying A1's block-length requirement,
+#'
+#' Assumption (A2) is checked by forming the augmented block-level stimulus
+#' matrix
 #' \deqn{
-#'   \tilde \mathbf{U}^* =
-#'   \begin{bmatrix}
-#'   1 & \tilde u^{(b_1)T} \\
-#'   \vdots & \vdots \\
-#'   1 & \tilde u^{(b_q)T}
-#'   \end{bmatrix},
+#' U^* =
+#' \left[
+#' \begin{array}{cc}
+#' 1 & \tilde{u}^{(b_1)T} \\
+#' \vdots & \vdots \\
+#' 1 & \tilde{u}^{(b_q)T}
+#' \end{array}
+#' \right]
 #' }
-#' and checking whether this matrix has rank \eqn{m + 1}. This is equivalent
-#' to checking whether there exists a subset of \eqn{m + 1} usable blocks whose
-#' augmented stimulus matrix is invertible.
+#' from the blocks satisfying A1's block-length requirement, and checking
+#' whether this matrix has rank \eqn{m + 1}. This is equivalent to checking
+#' whether there exists a subset of \eqn{m + 1} usable blocks whose augmented
+#' stimulus matrix is invertible.
 #'
 #' These diagnostics are sufficient-condition checks. Failure to satisfy one or
 #' more diagnostics does not necessarily imply that the model is not

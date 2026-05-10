@@ -38,11 +38,12 @@
 #'   Values must be binary (0/1).
 #' @param SNR Numeric. Signal-to-noise ratio for additive Gaussian noise,
 #'   defined as the ratio of the standard deviation of the signal to that of
-#'   the noise (i.e., \eqn{\mathrm{SNR} = \mathrm{sd}(\text{signal}) / \mathrm{sd}(\text{noise})}).
+#'   the noise, i.e.,
+#'   \eqn{SNR = sd(signal) / sd(noise)}.
 #'   Noise is generated such that
-#'   \eqn{\mathrm{sd}(\text{noise}) = \mathrm{sd}(\text{signal}) / \mathrm{SNR}},
+#'   \eqn{sd(noise) = sd(signal) / SNR},
 #'   implying a noise variance of
-#'   \eqn{\sigma^2 = \mathrm{Var}(\text{signal}) / \mathrm{SNR}^2}.
+#'   \eqn{\sigma^2 = Var(signal) / SNR^2}.
 #'   Must be positive.
 #'
 #' @param reparam Logical. If `TRUE`, reparameterizes diagonal elements of the A matrix

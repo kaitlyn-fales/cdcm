@@ -15,8 +15,8 @@
 #'   identifiability diagnostics.
 #' @param identifiability_tol Numeric tolerance for identifiability diagnostics.
 #'
-#' @return A list containing posterior-mean parameters, predicted latent states,
-#'   predicted BOLD signal, and estimated intercept.
+#' @return A list containing predicted latent states and predicted BOLD signal,
+#' and optional identifiability check.
 #'
 #' @export
 predict_cdcm <- function(draws_df, hypothesis_idxs, nscan, m, n_u, TR, U,
