@@ -183,7 +183,7 @@ functions {
     tp_vec_pad = append_row(0,tp_vec);
 
     matrix[num_elements(tp_vec)+1,n_u] u_pad;
-    u_pad = append_row(rep_row_vector(0,n_u),u);
+    u_pad = append_row(u[1], u);
 
     int prev_index = 1;
     int index;
