@@ -17,7 +17,9 @@ simulate_cdcm(
   z0 = NULL,
   check_solution = TRUE,
   tol = 1e-04,
-  seed = NULL
+  seed = NULL,
+  check_identifiability = FALSE,
+  identifiability_tol = 1e-08
 )
 }
 \arguments{
@@ -37,9 +39,11 @@ simulate_cdcm(
 
 \item{nscan}{Number of scan time points.}
 
-\item{m}{Number of brain regions (state dimension).}
+\item{m}{Integer. Number of brain regions/ROIs, denoted \eqn{d} in the
+manuscript.}
 
-\item{n_u}{Number of experimental inputs.}
+\item{n_u}{Integer. Number of experimental inputs/stimuli, denoted \eqn{m}
+in the manuscript.}
 
 \item{TR}{Repetition time (seconds).}
 
@@ -66,6 +70,16 @@ to assess numerical stability.}
 \item{tol}{Numeric tolerance for the analytic vs numeric solution comparison.}
 
 \item{seed}{Optional seed (scalar or length \code{m}) for reproducible noise generation.}
+
+\item{check_identifiability}{Logical. If \code{TRUE}, runs identifiability
+diagnostics on the simulated data and true latent trajectory. This includes
+design-level checks using \code{check_design_identifiability()} and
+parameter/latent-state checks using \code{check_latent_identifiability()}.
+Defaults to \code{FALSE}.}
+
+\item{identifiability_tol}{Numeric tolerance used for identifiability
+diagnostics when \code{check_identifiability = TRUE}. Defaults to
+\code{1e-8}.}
 }
 \value{
 A list with two components:
@@ -81,6 +95,14 @@ A list with two components:
 \describe{
 \item{z_signal}{Latent neural states (\verb{nscan x m})}
 \item{y_signal}{Noise-free BOLD signals (\verb{nscan x m})}
+}
+}
+\item{identifiability}{
+Returned only when \code{check_identifiability = TRUE}. A list
+containing:
+\describe{
+\item{design}{Results from \code{check_design_identifiability()}.}
+\item{latent}{Results from \code{check_latent_identifiability()}.}
 }
 }
 }
@@ -104,7 +126,13 @@ input matrix to include the initial time point required for solving the system.
 The neural dynamics follow the bilinear state space DCM. Within each block of
 constant input, the system admits a closed-form solution, which is used here
 for efficient simulation. The observed BOLD signal is obtained by convolving
-the neural states with the canonical HRF (linear combination of two gamma distributions).
+the neural states with the canonical HRF (linear combination of two gamma functions).
+
+Note on notation: this package uses \code{m} for the number of brain regions
+and \code{n_u} for the number of stimulus inputs, matching the internal Stan
+implementation. In the accompanying manuscript, these quantities are denoted
+\eqn{d} and \eqn{m}, respectively. Thus, package \code{m} corresponds to
+manuscript \eqn{d}, and package \code{n_u} corresponds to manuscript \eqn{m}.
 }
 \examples{
 nu <- list(

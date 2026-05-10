@@ -3,6 +3,7 @@
 export("%>%")
 export(cdcm_stan_file)
 export(check_design_identifiability)
+export(check_latent_identifiability)
 export(compile_cdcm)
 export(compile_meta_analysis)
 export(dcm_sample)

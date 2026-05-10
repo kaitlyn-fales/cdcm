@@ -80,6 +80,12 @@ intended as a practical diagnostic only: failure to satisfy these conditions
 does not necessarily imply non-identifiability, but it may indicate that the
 design is weak for reliable estimation.
 
+Note on notation: this package uses \code{m} for the number of brain regions
+and \code{n_u} for the number of stimulus inputs, matching the internal Stan
+implementation. In the accompanying manuscript, these quantities are denoted
+\eqn{d} and \eqn{m}, respectively. Thus, package \code{m} corresponds to
+manuscript \eqn{d}, and package \code{n_u} corresponds to manuscript \eqn{m}.
+
 The returned Stan data list can be used for either single-chain or
 multi-chain sampling. Its structure does not depend on the number of chains.
 }

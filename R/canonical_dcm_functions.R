@@ -63,73 +63,77 @@ get_block_lengths <- function(input) {
   return(lengths)
 }
 
-#' Check whether a block design satisfies sufficient identifiability diagnostics
+#' Check whether a block design satisfies CDCM identifiability assumptions
 #'
-#' Evaluates design sufficient conditions for identifiability under a
-#' block-design experimental input. These checks are intended as practical
-#' design diagnostics for CDCM analyses and related simulation studies.
+#' Evaluates practical sufficient-condition diagnostics for the CDCM
+#' identifiability result under a block-design experimental input. The function
+#' checks whether the full scan contains enough usable blocks and whether the
+#' corresponding block-level stimulus combinations are sufficiently
+#' unconfounded.
 #'
 #' @param data A list containing:
 #'   \itemize{
-#'     \item \code{times}: a numeric vector of observation times
-#'     \item \code{u}: a \eqn{T \times n_u} matrix encoding the experimental
-#'     stimulus inputs
-#'     \item \code{y_obs}: a \eqn{T \times m} matrix of observed ROI-level BOLD
-#'     signals
+#'     \item \code{times}: a numeric vector of equally spaced observation times.
+#'     \item \code{u}: a \eqn{T \times m} numeric matrix encoding the
+#'     stimulus inputs at each observation time.
+#'     \item \code{y_obs}: a \eqn{T \times d} numeric matrix of observed
+#'     ROI-level BOLD signals.
 #'   }
+#' @param tol Numeric tolerance used for the equal-spacing and matrix-rank
+#'   checks. Defaults to \code{1e-8}.
 #' @param warn Logical; if \code{TRUE}, warnings are issued when one or more
-#'   sufficient conditions are not satisfied.
+#'   diagnostics are not satisfied. Defaults to \code{TRUE}.
 #'
 #' @details
-#' This function evaluates a set of practical design diagnostics motivated by
-#' sufficient conditions for identifiability in the CDCM framework under
-#' block-design experiments. In particular, it checks:
-#' \itemize{
-#'   \item whether block lengths are long enough relative to the number of ROIs
-#'   \item whether the total number of observations is large enough relative to
-#'   the number of ROIs and stimulus inputs
-#'   \item whether enough distinct blockwise input configurations are observed
-#'   when the number of stimulus dimensions is 2 or 3
+#' This function checks the experimental design assumptions used in the CDCM
+#' identifiability result. The input matrix \code{u} is provided at the
+#' observation level, with each row corresponding to \eqn{u(t_j)}. Since the
+#' design is assumed to be blockwise constant, the block-level stimulus vector
+#' \eqn{\tilde u^{(b)}} is obtained by taking the first row of \code{u} within
+#' each block.
+#'
+#' Assumption (A1) is checked by verifying that the observation times are equally
+#' spaced and that at least \eqn{m + 1} blocks contain at least \eqn{d + 1}
+#' observations, where \eqn{d} is the number of ROIs and \eqn{m} is the number
+#' of stimulus inputs.
+#'
+#' Assumption (A2) is checked by forming the augmented block-level stimulus matrix
+#' from the blocks satisfying A1's block-length requirement,
+#' \deqn{
+#'   \tilde \mathbf{U}^* =
+#'   \begin{bmatrix}
+#'   1 & \tilde u^{(b_1)T} \\
+#'   \vdots & \vdots \\
+#'   1 & \tilde u^{(b_q)T}
+#'   \end{bmatrix},
 #' }
+#' and checking whether this matrix has rank \eqn{m + 1}. This is equivalent
+#' to checking whether there exists a subset of \eqn{m + 1} usable blocks whose
+#' augmented stimulus matrix is invertible.
 #'
-#' These checks are based on sufficient conditions and should be interpreted as
-#' practical diagnostics rather than necessary conditions. Failure to satisfy
-#' one or more of them does not necessarily imply non-identifiability, but it
-#' may indicate that the design is weak for reliable estimation.
-#'
-#' The number of ROIs is taken to be \code{m = ncol(y_obs)}, the number of
-#' stimulus dimensions is \code{n_u = ncol(u)}, and the number of observations
-#' is \code{T = length(times)}.
+#' These diagnostics are sufficient-condition checks. Failure to satisfy one or
+#' more diagnostics does not necessarily imply that the model is not
+#' identifiable, but it may indicate that the design is weak for reliable
+#' estimation.
 #'
 #' @return A list containing:
 #' \describe{
-#'   \item{T}{The number of observations.}
-#'   \item{m}{The number of ROIs.}
-#'   \item{n_u}{The number of stimulus dimensions.}
-#'   \item{changepoints}{The changepoint vector returned internally by
-#'   \code{get_changepoints()}.}
-#'   \item{block_lengths}{The block lengths computed from the design matrix.}
-#'   \item{first_block_zero}{Logical indicating whether the first input block is
-#'   the all-zero input configuration.}
-#'   \item{n_distinct_block_inputs}{The number of distinct blockwise input
-#'   configurations observed.}
-#'   \item{cond_A1_first}{Logical indicating whether the first block satisfies
-#'   the minimum block-length requirement.}
-#'   \item{cond_A1_later}{Logical indicating whether all later blocks satisfy
-#'   the minimum block-length requirement.}
-#'   \item{cond_A1}{Logical indicating whether the block-length condition is
-#'   satisfied overall.}
-#'   \item{cond_A2}{Logical indicating whether the observation-count condition is
+#'   \item{\code{cond_A1}}{Logical indicating whether the A1 diagnostic is
 #'   satisfied.}
-#'   \item{cond_A3}{Logical or \code{NA}. For designs with \code{n_u = 2} or
-#'   \code{3}, indicates whether enough distinct blockwise input settings are
-#'   observed. For other values of \code{n_u}, this is \code{NA}.}
-#'   \item{all_ok}{Logical indicating whether all evaluated sufficient-condition
-#'   diagnostics are satisfied.}
+#'   \item{\code{cond_A2}}{Logical indicating whether the A2 diagnostic is
+#'   satisfied.}
+#'   \item{\code{all_ok}}{Logical indicating whether both diagnostics are
+#'   satisfied.}
+#'   \item{\code{equally_spaced}}{Logical indicating whether the observation
+#'   times are equally spaced up to \code{tol}.}
+#'   \item{\code{n_eligible_blocks}}{Number of blocks containing at least
+#'   \eqn{d + 1} observations.}
+#'   \item{\code{rank_U_aug}}{Rank of the augmented block-level stimulus matrix
+#'   formed from eligible blocks.}
 #' }
 #'
 #' @export
-check_design_identifiability <- function(data, warn = TRUE) {
+check_design_identifiability <- function(data, tol = 1e-8, warn = TRUE) {
 
   if (!is.list(data)) {
     stop("`data` must be a list.", call. = FALSE)
@@ -157,95 +161,101 @@ check_design_identifiability <- function(data, warn = TRUE) {
     stop("`data$u` must be a matrix.", call. = FALSE)
   }
 
+  if (!is.numeric(u)) {
+    stop("`data$u` must be numeric.", call. = FALSE)
+  }
+
   if (!is.matrix(y_obs)) {
     stop("`data$y_obs` must be a matrix.", call. = FALSE)
   }
 
-  T_obs <- length(times)
-  m <- ncol(y_obs)   # number of ROIs
-  n_u <- ncol(u)     # number of stimuli
+  if (!is.numeric(y_obs)) {
+    stop("`data$y_obs` must be numeric.", call. = FALSE)
+  }
 
-  if (nrow(u) != T_obs) {
+  if (length(times) < 2) {
+    stop("`data$times` must contain at least two observation times.", call. = FALSE)
+  }
+
+  if (nrow(u) != length(times)) {
     stop("`data$u` must have the same number of rows as length(data$times).", call. = FALSE)
   }
 
-  if (nrow(y_obs) != T_obs) {
+  if (nrow(y_obs) != length(times)) {
     stop("`data$y_obs` must have the same number of rows as length(data$times).", call. = FALSE)
   }
 
-  changes <- get_changepoints(u)
-  block_lengths <- get_block_lengths(u)
-
-  first_block_zero <- all(u[1, ] == 0)
-
-  # A1
-  first_block_min <- if (first_block_zero) (m + 1) else (m + 2)
-
-  cond_A1_first <- block_lengths[1] >= first_block_min
-  cond_A1_later <- if (length(block_lengths) > 1) {
-    all(block_lengths[-1] >= (m + 1))
-  } else {
-    TRUE
+  if (!is.numeric(tol) || length(tol) != 1 || tol <= 0) {
+    stop("`tol` must be a positive numeric scalar.", call. = FALSE)
   }
-  cond_A1 <- cond_A1_first && cond_A1_later
 
-  # A2
-  cond_A2 <- T_obs > (m + 1) * (n_u + 1)
+  if (!is.logical(warn) || length(warn) != 1) {
+    stop("`warn` must be TRUE or FALSE.", call. = FALSE)
+  }
 
-  # A3
-  cond_A3 <- NA
-  n_distinct_block_inputs <- NA_integer_
+  d <- ncol(y_obs)
+  m <- ncol(u)
 
-  if (length(changes) == 1) {
-    block_starts <- 1
+  time_diff <- diff(times)
+  equally_spaced <- max(abs(time_diff - time_diff[1])) <= tol
+
+  block_lengths <- get_block_lengths(u)
+  changes <- get_changepoints(u)
+
+  block_starts <- if (length(changes) == 1) {
+    1
   } else {
-    block_starts <- c(1, changes[-length(changes)])
+    c(1, changes[-length(changes)])
   }
 
   block_inputs <- u[block_starts, , drop = FALSE]
-  n_distinct_block_inputs <- nrow(unique(block_inputs))
 
-  if (n_u %in% c(2, 3)) {
-    cond_A3 <- n_distinct_block_inputs >= (n_u + 1)
+  eligible_blocks <- block_lengths >= (d + 1)
+  n_eligible_blocks <- sum(eligible_blocks)
+
+  cond_A1 <- equally_spaced && n_eligible_blocks >= (m + 1)
+
+  eligible_inputs <- block_inputs[eligible_blocks, , drop = FALSE]
+
+  U_aug <- if (nrow(eligible_inputs) > 0) {
+    cbind(1, eligible_inputs)
+  } else {
+    matrix(numeric(0), nrow = 0, ncol = m + 1)
   }
 
-  all_ok <- cond_A1 && cond_A2 && (is.na(cond_A3) || cond_A3)
+  rank_U_aug <- if (nrow(U_aug) > 0) {
+    qr(U_aug, tol = tol)$rank
+  } else {
+    0L
+  }
+
+  cond_A2 <- rank_U_aug == (m + 1)
+
+  all_ok <- cond_A1 && cond_A2
 
   if (warn) {
     if (!cond_A1) {
       warning(
-        "Block-length condition failed: the design may not satisfy the minimum block-length requirements for identifiability.",
+        "A1 failed: observation times are not equally spaced, or fewer than `m + 1` blocks contain at least `d + 1` observations.",
         call. = FALSE
       )
     }
+
     if (!cond_A2) {
       warning(
-        "Observation-count condition failed: `length(times)` is not greater than `(m + 1) * (n_u + 1)`.",
-        call. = FALSE
-      )
-    }
-    if (!is.na(cond_A3) && !cond_A3) {
-      warning(
-        "Distinct-input condition failed: fewer than `n_u + 1` distinct blockwise input settings were observed.",
+        "A2 failed: no set of `m + 1` eligible blocks gives an invertible augmented stimulus matrix.",
         call. = FALSE
       )
     }
   }
 
   return(list(
-    T = T_obs,
-    m = m,
-    n_u = n_u,
-    changepoints = changes,
-    block_lengths = block_lengths,
-    first_block_zero = first_block_zero,
-    n_distinct_block_inputs = n_distinct_block_inputs,
-    cond_A1_first = cond_A1_first,
-    cond_A1_later = cond_A1_later,
     cond_A1 = cond_A1,
     cond_A2 = cond_A2,
-    cond_A3 = cond_A3,
-    all_ok = all_ok
+    all_ok = all_ok,
+    equally_spaced = equally_spaced,
+    n_eligible_blocks = n_eligible_blocks,
+    rank_U_aug = rank_U_aug
   ))
 }
 
@@ -343,6 +353,12 @@ get_last_draws_for_init <- function(draws) {
 #' intended as a practical diagnostic only: failure to satisfy these conditions
 #' does not necessarily imply non-identifiability, but it may indicate that the
 #' design is weak for reliable estimation.
+#'
+#' Note on notation: this package uses \code{m} for the number of brain regions
+#' and \code{n_u} for the number of stimulus inputs, matching the internal Stan
+#' implementation. In the accompanying manuscript, these quantities are denoted
+#' \eqn{d} and \eqn{m}, respectively. Thus, package \code{m} corresponds to
+#' manuscript \eqn{d}, and package \code{n_u} corresponds to manuscript \eqn{m}.
 #'
 #' The returned Stan data list can be used for either single-chain or
 #' multi-chain sampling. Its structure does not depend on the number of chains.

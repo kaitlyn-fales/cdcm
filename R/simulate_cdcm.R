@@ -29,8 +29,10 @@
 #' }
 #'
 #' @param nscan Number of scan time points.
-#' @param m Number of brain regions (state dimension).
-#' @param n_u Number of experimental inputs.
+#' @param m Integer. Number of brain regions/ROIs, denoted \eqn{d} in the
+#'   manuscript.
+#' @param n_u Integer. Number of experimental inputs/stimuli, denoted \eqn{m}
+#'   in the manuscript.
 #' @param TR Repetition time (seconds).
 #' @param U Input (stimulus) matrix of dimension `nscan x n_u` or `(nscan + 1) x n_u`.
 #'   Values must be binary (0/1).
@@ -50,6 +52,14 @@
 #'   to assess numerical stability.
 #' @param tol Numeric tolerance for the analytic vs numeric solution comparison.
 #' @param seed Optional seed (scalar or length `m`) for reproducible noise generation.
+#' @param check_identifiability Logical. If \code{TRUE}, runs identifiability
+#'   diagnostics on the simulated data and true latent trajectory. This includes
+#'   design-level checks using \code{check_design_identifiability()} and
+#'   parameter/latent-state checks using \code{check_latent_identifiability()}.
+#'   Defaults to \code{FALSE}.
+#' @param identifiability_tol Numeric tolerance used for identifiability
+#'   diagnostics when \code{check_identifiability = TRUE}. Defaults to
+#'   \code{1e-8}.
 #'
 #' @return A list with two components:
 #' \describe{
@@ -66,13 +76,27 @@
 #'       \item{y_signal}{Noise-free BOLD signals (`nscan x m`)}
 #'     }
 #'   }
+#'   \item{identifiability}{
+#'     Returned only when \code{check_identifiability = TRUE}. A list
+#'     containing:
+#'     \describe{
+#'       \item{design}{Results from \code{check_design_identifiability()}.}
+#'       \item{latent}{Results from \code{check_latent_identifiability()}.}
+#'     }
+#'   }
 #' }
 #'
 #' @details
 #' The neural dynamics follow the bilinear state space DCM. Within each block of
 #' constant input, the system admits a closed-form solution, which is used here
 #' for efficient simulation. The observed BOLD signal is obtained by convolving
-#' the neural states with the canonical HRF (linear combination of two gamma distributions).
+#' the neural states with the canonical HRF (linear combination of two gamma functions).
+#'
+#' Note on notation: this package uses \code{m} for the number of brain regions
+#' and \code{n_u} for the number of stimulus inputs, matching the internal Stan
+#' implementation. In the accompanying manuscript, these quantities are denoted
+#' \eqn{d} and \eqn{m}, respectively. Thus, package \code{m} corresponds to
+#' manuscript \eqn{d}, and package \code{n_u} corresponds to manuscript \eqn{m}.
 #'
 #' @examples
 #' nu <- list(
@@ -107,7 +131,8 @@
 #' @export
 simulate_cdcm <- function(nu, hypothesis_idxs, nscan, m, n_u, TR, U, SNR,
                           reparam = TRUE, z0 = NULL, check_solution = TRUE, tol = 1e-4,
-                          seed = NULL) {
+                          seed = NULL, check_identifiability = FALSE,
+                          identifiability_tol = 1e-8) {
 
   # Check inputs and modify as needed for simulation (creation of times, checking U, etc.)
   checked <- simulation_format_check(nu, hypothesis_idxs, nscan, m, n_u, TR, U)
@@ -181,7 +206,41 @@ simulate_cdcm <- function(nu, hypothesis_idxs, nscan, m, n_u, TR, U, SNR,
   simulated_data <- list(times = times[-1], u = input[-1, , drop = FALSE], y_obs = y_obs)
   true_signals <- list(z_signal = analytic_sol[-1,], y_signal = y_conv)
 
-  # Return list of both objects
-  return(list(simulated_data = simulated_data, true_signals = true_signals))
+  identifiability <- NULL
+
+  if (check_identifiability) {
+
+    design_check <- check_design_identifiability(
+      data = simulated_data,
+      tol = identifiability_tol,
+      warn = TRUE
+    )
+
+    latent_check <- check_latent_identifiability(
+      A = paramMats$A,
+      B = paramMats$B,
+      u = simulated_data$u,
+      z = true_signals$z_signal,
+      tol = identifiability_tol,
+      warn = TRUE
+    )
+
+    identifiability <- list(
+      design = design_check,
+      latent = latent_check
+    )
+  }
+
+  # Return all
+  out <- list(
+    simulated_data = simulated_data,
+    true_signals = true_signals
+  )
+
+  if (check_identifiability) {
+    out$identifiability <- identifiability
+  }
+
+  return(out)
 }
 
