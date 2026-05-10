@@ -20,7 +20,9 @@ simulate_cdcm(
   z0 = NULL,
   check_solution = TRUE,
   tol = 1e-04,
-  seed = NULL
+  seed = NULL,
+  check_identifiability = FALSE,
+  identifiability_tol = 1e-08
 )
 ```
 
@@ -64,11 +66,13 @@ simulate_cdcm(
 
 - m:
 
-  Number of brain regions (state dimension).
+  Integer. Number of brain regions/ROIs, denoted \\d\\ in the
+  manuscript.
 
 - n_u:
 
-  Number of experimental inputs.
+  Integer. Number of experimental inputs/stimuli, denoted \\m\\ in the
+  manuscript.
 
 - TR:
 
@@ -82,12 +86,10 @@ simulate_cdcm(
 - SNR:
 
   Numeric. Signal-to-noise ratio for additive Gaussian noise, defined as
-  the ratio of the standard deviation of the signal to that of the noise
-  (i.e., \\\mathrm{SNR} = \mathrm{sd}(\text{signal}) /
-  \mathrm{sd}(\text{noise})\\). Noise is generated such that
-  \\\mathrm{sd}(\text{noise}) = \mathrm{sd}(\text{signal}) /
-  \mathrm{SNR}\\, implying a noise variance of \\\sigma^2 =
-  \mathrm{Var}(\text{signal}) / \mathrm{SNR}^2\\. Must be positive.
+  the ratio of the standard deviation of the signal to that of the
+  noise, i.e., \\SNR = sd(signal) / sd(noise)\\. Noise is generated such
+  that \\sd(noise) = sd(signal) / SNR\\, implying a noise variance of
+  \\\sigma^2 = Var(signal) / SNR^2\\. Must be positive.
 
 - reparam:
 
@@ -111,6 +113,21 @@ simulate_cdcm(
 
   Optional seed (scalar or length `m`) for reproducible noise
   generation.
+
+- check_identifiability:
+
+  Logical. If `TRUE`, runs identifiability diagnostics on the simulated
+  data and true latent trajectory. This includes design-level checks
+  using
+  [`check_design_identifiability()`](https://kaitlyn-fales.github.io/cdcm/reference/check_design_identifiability.md)
+  and parameter/latent-state checks using
+  [`check_latent_identifiability()`](https://kaitlyn-fales.github.io/cdcm/reference/check_latent_identifiability.md).
+  Defaults to `FALSE`.
+
+- identifiability_tol:
+
+  Numeric tolerance used for identifiability diagnostics when
+  `check_identifiability = TRUE`. Defaults to `1e-8`.
 
 ## Value
 
@@ -140,6 +157,20 @@ A list with two components:
 
   :   Noise-free BOLD signals (`nscan x m`)
 
+- identifiability:
+
+  Returned only when `check_identifiability = TRUE`. A list containing:
+
+  design
+
+  :   Results from
+      [`check_design_identifiability()`](https://kaitlyn-fales.github.io/cdcm/reference/check_design_identifiability.md).
+
+  latent
+
+  :   Results from
+      [`check_latent_identifiability()`](https://kaitlyn-fales.github.io/cdcm/reference/check_latent_identifiability.md).
+
 ## Details
 
 This function generates:
@@ -162,7 +193,13 @@ The neural dynamics follow the bilinear state space DCM. Within each
 block of constant input, the system admits a closed-form solution, which
 is used here for efficient simulation. The observed BOLD signal is
 obtained by convolving the neural states with the canonical HRF (linear
-combination of two gamma distributions).
+combination of two gamma functions).
+
+Note on notation: this package uses `m` for the number of brain regions
+and `n_u` for the number of stimulus inputs, matching the internal Stan
+implementation. In the accompanying manuscript, these quantities are
+denoted \\d\\ and \\m\\, respectively. Thus, package `m` corresponds to
+manuscript \\d\\, and package `n_u` corresponds to manuscript \\m\\.
 
 ## Examples
 

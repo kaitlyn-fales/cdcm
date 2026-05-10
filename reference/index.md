@@ -2,11 +2,15 @@
 
 ## All functions
 
+- [`build_stimulus_vector()`](https://kaitlyn-fales.github.io/cdcm/reference/build_stimulus_vector.md)
+  : Build binary block-design stimulus vector
 - [`cdcm_stan_file()`](https://kaitlyn-fales.github.io/cdcm/reference/cdcm_stan_file.md)
   : Path to the canonical DCM Stan program
 - [`check_design_identifiability()`](https://kaitlyn-fales.github.io/cdcm/reference/check_design_identifiability.md)
-  : Check whether a block design satisfies sufficient identifiability
-  diagnostics
+  : Check whether a block design satisfies CDCM identifiability
+  assumptions
+- [`check_latent_identifiability()`](https://kaitlyn-fales.github.io/cdcm/reference/check_latent_identifiability.md)
+  : Check parameter and latent-state identifiability diagnostics
 - [`compile_cdcm()`](https://kaitlyn-fales.github.io/cdcm/reference/compile_cdcm.md)
   : Compile the CDCM Stan model
 - [`compile_meta_analysis()`](https://kaitlyn-fales.github.io/cdcm/reference/compile_meta_analysis.md)
@@ -21,5 +25,7 @@
   : Path to the group-level meta-analysis Stan program
 - [`minESS_criterion()`](https://kaitlyn-fales.github.io/cdcm/reference/minESS_criterion.md)
   : Compute a minimum ESS threshold for CDCM sampling
+- [`predict_cdcm()`](https://kaitlyn-fales.github.io/cdcm/reference/predict_cdcm.md)
+  : Predict CDCM latent and BOLD signals from posterior draws
 - [`simulate_cdcm()`](https://kaitlyn-fales.github.io/cdcm/reference/simulate_cdcm.md)
   : Simulate fMRI time series under CDCM

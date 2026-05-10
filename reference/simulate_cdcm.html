@@ -53,7 +53,9 @@ CDCM with user-specified connectivity parameters and experimental inputs.</p>
 <span>  z0 <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  check_solution <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  tol <span class="op">=</span> <span class="fl">1e-04</span>,</span>
-<span>  seed <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  seed <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  check_identifiability <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  identifiability_tol <span class="op">=</span> <span class="fl">1e-08</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -94,11 +96,13 @@ CDCM with user-specified connectivity parameters and experimental inputs.</p>
 
 
 <dt id="arg-m">m<a class="anchor" aria-label="anchor" href="#arg-m"></a></dt>
-<dd><p>Number of brain regions (state dimension).</p></dd>
+<dd><p>Integer. Number of brain regions/ROIs, denoted \(d\) in the
+manuscript.</p></dd>
 
 
 <dt id="arg-n-u">n_u<a class="anchor" aria-label="anchor" href="#arg-n-u"></a></dt>
-<dd><p>Number of experimental inputs.</p></dd>
+<dd><p>Integer. Number of experimental inputs/stimuli, denoted \(m\)
+in the manuscript.</p></dd>
 
 
 <dt id="arg-tr">TR<a class="anchor" aria-label="anchor" href="#arg-tr"></a></dt>
@@ -113,11 +117,12 @@ Values must be binary (0/1).</p></dd>
 <dt id="arg-snr">SNR<a class="anchor" aria-label="anchor" href="#arg-snr"></a></dt>
 <dd><p>Numeric. Signal-to-noise ratio for additive Gaussian noise,
 defined as the ratio of the standard deviation of the signal to that of
-the noise (i.e., \(\mathrm{SNR} = \mathrm{sd}(\text{signal}) / \mathrm{sd}(\text{noise})\)).
+the noise, i.e.,
+\(SNR = sd(signal) / sd(noise)\).
 Noise is generated such that
-\(\mathrm{sd}(\text{noise}) = \mathrm{sd}(\text{signal}) / \mathrm{SNR}\),
+\(sd(noise) = sd(signal) / SNR\),
 implying a noise variance of
-\(\sigma^2 = \mathrm{Var}(\text{signal}) / \mathrm{SNR}^2\).
+\(\sigma^2 = Var(signal) / SNR^2\).
 Must be positive.</p></dd>
 
 
@@ -141,6 +146,20 @@ to assess numerical stability.</p></dd>
 
 <dt id="arg-seed">seed<a class="anchor" aria-label="anchor" href="#arg-seed"></a></dt>
 <dd><p>Optional seed (scalar or length <code>m</code>) for reproducible noise generation.</p></dd>
+
+
+<dt id="arg-check-identifiability">check_identifiability<a class="anchor" aria-label="anchor" href="#arg-check-identifiability"></a></dt>
+<dd><p>Logical. If <code>TRUE</code>, runs identifiability
+diagnostics on the simulated data and true latent trajectory. This includes
+design-level checks using <code><a href="check_design_identifiability.html">check_design_identifiability()</a></code> and
+parameter/latent-state checks using <code><a href="check_latent_identifiability.html">check_latent_identifiability()</a></code>.
+Defaults to <code>FALSE</code>.</p></dd>
+
+
+<dt id="arg-identifiability-tol">identifiability_tol<a class="anchor" aria-label="anchor" href="#arg-identifiability-tol"></a></dt>
+<dd><p>Numeric tolerance used for identifiability
+diagnostics when <code>check_identifiability = TRUE</code>. Defaults to
+<code>1e-8</code>.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -170,6 +189,17 @@ to assess numerical stability.</p></dd>
 
 </dl></dd>
 
+<dt>identifiability</dt>
+<dd><p>Returned only when <code>check_identifiability = TRUE</code>. A list
+containing:</p><dl><dt>design</dt>
+<dd><p>Results from <code><a href="check_design_identifiability.html">check_design_identifiability()</a></code>.</p></dd>
+
+<dt>latent</dt>
+<dd><p>Results from <code><a href="check_latent_identifiability.html">check_latent_identifiability()</a></code>.</p></dd>
+
+
+</dl></dd>
+
 
 </dl></div>
     <div class="section level2">
@@ -183,7 +213,12 @@ input matrix to include the initial time point required for solving the system.<
 <p>The neural dynamics follow the bilinear state space DCM. Within each block of
 constant input, the system admits a closed-form solution, which is used here
 for efficient simulation. The observed BOLD signal is obtained by convolving
-the neural states with the canonical HRF (linear combination of two gamma distributions).</p>
+the neural states with the canonical HRF (linear combination of two gamma functions).</p>
+<p>Note on notation: this package uses <code>m</code> for the number of brain regions
+and <code>n_u</code> for the number of stimulus inputs, matching the internal Stan
+implementation. In the accompanying manuscript, these quantities are denoted
+\(d\) and \(m\), respectively. Thus, package <code>m</code> corresponds to
+manuscript \(d\), and package <code>n_u</code> corresponds to manuscript \(m\).</p>
     </div>
 
     <div class="section level2">

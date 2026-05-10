@@ -132,6 +132,11 @@ sufficient conditions are not satisfied, a warning is issued. This warning is
 intended as a practical diagnostic only: failure to satisfy these conditions
 does not necessarily imply non-identifiability, but it may indicate that the
 design is weak for reliable estimation.</p>
+<p>Note on notation: this package uses <code>m</code> for the number of brain regions
+and <code>n_u</code> for the number of stimulus inputs, matching the internal Stan
+implementation. In the accompanying manuscript, these quantities are denoted
+\(d\) and \(m\), respectively. Thus, package <code>m</code> corresponds to
+manuscript \(d\), and package <code>n_u</code> corresponds to manuscript \(m\).</p>
 <p>The returned Stan data list can be used for either single-chain or
 multi-chain sampling. Its structure does not depend on the number of chains.</p>
     </div>

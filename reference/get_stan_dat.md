@@ -109,6 +109,12 @@ This warning is intended as a practical diagnostic only: failure to
 satisfy these conditions does not necessarily imply non-identifiability,
 but it may indicate that the design is weak for reliable estimation.
 
+Note on notation: this package uses `m` for the number of brain regions
+and `n_u` for the number of stimulus inputs, matching the internal Stan
+implementation. In the accompanying manuscript, these quantities are
+denoted \\d\\ and \\m\\, respectively. Thus, package `m` corresponds to
+manuscript \\d\\, and package `n_u` corresponds to manuscript \\m\\.
+
 The returned Stan data list can be used for either single-chain or
 multi-chain sampling. Its structure does not depend on the number of
 chains.

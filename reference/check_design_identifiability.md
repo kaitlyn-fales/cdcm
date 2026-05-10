@@ -1,13 +1,15 @@
-# Check whether a block design satisfies sufficient identifiability diagnostics
+# Check whether a block design satisfies CDCM identifiability assumptions
 
-Evaluates design sufficient conditions for identifiability under a
-block-design experimental input. These checks are intended as practical
-design diagnostics for CDCM analyses and related simulation studies.
+Evaluates practical sufficient-condition diagnostics for the CDCM
+identifiability result under a block-design experimental input. The
+function checks whether the full scan contains enough usable blocks and
+whether the corresponding block-level stimulus combinations are
+sufficiently unconfounded.
 
 ## Usage
 
 ``` r
-check_design_identifiability(data, warn = TRUE)
+check_design_identifiability(data, tol = 1e-08, warn = TRUE)
 ```
 
 ## Arguments
@@ -16,102 +18,77 @@ check_design_identifiability(data, warn = TRUE)
 
   A list containing:
 
-  - `times`: a numeric vector of observation times
+  - `times`: a numeric vector of equally spaced observation times.
 
-  - `u`: a \\T \times n_u\\ matrix encoding the experimental stimulus
-    inputs
+  - `u`: a \\T \times m\\ numeric matrix encoding the stimulus inputs at
+    each observation time.
 
-  - `y_obs`: a \\T \times m\\ matrix of observed ROI-level BOLD signals
+  - `y_obs`: a \\T \times d\\ numeric matrix of observed ROI-level BOLD
+    signals.
+
+- tol:
+
+  Numeric tolerance used for the equal-spacing and matrix-rank checks.
+  Defaults to `1e-8`.
 
 - warn:
 
-  Logical; if `TRUE`, warnings are issued when one or more sufficient
-  conditions are not satisfied.
+  Logical; if `TRUE`, warnings are issued when one or more diagnostics
+  are not satisfied. Defaults to `TRUE`.
 
 ## Value
 
 A list containing:
 
-- T:
+- `cond_A1`:
 
-  The number of observations.
+  Logical indicating whether the A1 diagnostic is satisfied.
 
-- m:
+- `cond_A2`:
 
-  The number of ROIs.
+  Logical indicating whether the A2 diagnostic is satisfied.
 
-- n_u:
+- `all_ok`:
 
-  The number of stimulus dimensions.
+  Logical indicating whether both diagnostics are satisfied.
 
-- changepoints:
+- `equally_spaced`:
 
-  The changepoint vector returned internally by `get_changepoints()`.
+  Logical indicating whether the observation times are equally spaced up
+  to `tol`.
 
-- block_lengths:
+- `n_eligible_blocks`:
 
-  The block lengths computed from the design matrix.
+  Number of blocks containing at least \\d + 1\\ observations.
 
-- first_block_zero:
+- `rank_U_aug`:
 
-  Logical indicating whether the first input block is the all-zero input
-  configuration.
-
-- n_distinct_block_inputs:
-
-  The number of distinct blockwise input configurations observed.
-
-- cond_A1_first:
-
-  Logical indicating whether the first block satisfies the minimum
-  block-length requirement.
-
-- cond_A1_later:
-
-  Logical indicating whether all later blocks satisfy the minimum
-  block-length requirement.
-
-- cond_A1:
-
-  Logical indicating whether the block-length condition is satisfied
-  overall.
-
-- cond_A2:
-
-  Logical indicating whether the observation-count condition is
-  satisfied.
-
-- cond_A3:
-
-  Logical or `NA`. For designs with `n_u = 2` or `3`, indicates whether
-  enough distinct blockwise input settings are observed. For other
-  values of `n_u`, this is `NA`.
-
-- all_ok:
-
-  Logical indicating whether all evaluated sufficient-condition
-  diagnostics are satisfied.
+  Rank of the augmented block-level stimulus matrix formed from eligible
+  blocks.
 
 ## Details
 
-This function evaluates a set of practical design diagnostics motivated
-by sufficient conditions for identifiability in the CDCM framework under
-block-design experiments. In particular, it checks:
+This function checks the experimental design assumptions used in the
+CDCM identifiability result. The input matrix `u` is provided at the
+observation level, with each row corresponding to \\u(t_j)\\. Since the
+design is assumed to be blockwise constant, the block-level stimulus
+vector \\\tilde u^{(b)}\\ is obtained by taking the first row of `u`
+within each block.
 
-- whether block lengths are long enough relative to the number of ROIs
+Assumption (A1) is checked by verifying that the observation times are
+equally spaced and that at least \\m + 1\\ blocks contain at least \\d +
+1\\ observations, where \\d\\ is the number of ROIs and \\m\\ is the
+number of stimulus inputs.
 
-- whether the total number of observations is large enough relative to
-  the number of ROIs and stimulus inputs
+Assumption (A2) is checked by forming the augmented block-level stimulus
+matrix \$\$ U^\* = \left\[ \begin{array}{cc} 1 & \tilde{u}^{(b_1)T} \\
+\vdots & \vdots \\ 1 & \tilde{u}^{(b_q)T} \end{array} \right\] \$\$ from
+the blocks satisfying A1's block-length requirement, and checking
+whether this matrix has rank \\m + 1\\. This is equivalent to checking
+whether there exists a subset of \\m + 1\\ usable blocks whose augmented
+stimulus matrix is invertible.
 
-- whether enough distinct blockwise input configurations are observed
-  when the number of stimulus dimensions is 2 or 3
-
-These checks are based on sufficient conditions and should be
-interpreted as practical diagnostics rather than necessary conditions.
-Failure to satisfy one or more of them does not necessarily imply
-non-identifiability, but it may indicate that the design is weak for
-reliable estimation.
-
-The number of ROIs is taken to be `m = ncol(y_obs)`, the number of
-stimulus dimensions is `n_u = ncol(u)`, and the number of observations
-is `T = length(times)`.
+These diagnostics are sufficient-condition checks. Failure to satisfy
+one or more diagnostics does not necessarily imply that the model is not
+identifiable, but it may indicate that the design is weak for reliable
+estimation.

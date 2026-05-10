@@ -74,7 +74,8 @@ sim <- simulate_cdcm(
   TR = 2,
   U = U,
   SNR = 3,
-  seed = 123
+  seed = 123,
+  check_identifiability = TRUE
 )
 
 dat <- sim$simulated_data
@@ -109,8 +110,6 @@ fit <- dcm_sample(
 
 - Canonical DCM (CDCM) for task-based fMRI
 - Meta-analysis model for group-level inference
-
-Additional models (e.g., multi-run meta-analysis) are planned.
 
 ------------------------------------------------------------------------
 
