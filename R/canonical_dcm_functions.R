@@ -309,6 +309,13 @@ get_last_draws_for_init <- function(draws) {
   return(grouped_list)
 }
 
+# Function to demean data y_obs
+demean_data <- function(x){
+  x_means <- colMeans(x)
+  x_demeaned <- sweep(x, MARGIN = 2, STATS = x_means, FUN = "-")
+  return(x_demeaned)
+}
+
 #' Construct a Stan data list for the CDCM model
 #'
 #' Prepares the input data and hypothesis indexing structures required by the
@@ -446,6 +453,16 @@ get_stan_dat <- function(data, hypothesis_idxs, ode_solver_type = 1, tol = 1e-5,
     if (any(abs(diffs - diffs[1]) > 1e-8)) {
       stop("`data$times` must be equally spaced.", call. = FALSE)
     }
+  }
+
+  # Check if demeaned data y_obs and if not, demean it
+  mean_y_obs <- colMeans(y_obs)
+  if (any(abs(mean_y_obs) > 1e-8)) {
+    warning(
+      "`cdcm` assumes demeaned data, and `data$y_obs` is not. Returning demeaned `data$y_obs`.",
+      call. = FALSE
+    )
+    y_obs <- demean_data(y_obs)
   }
 
   # Format checks for hypothesis_idxs
