@@ -570,8 +570,8 @@ get_num_param <- function(data){
   }
 
   num_nu <- data$d_A + data$d_B + data$d_C
-  num_sigma_z0_beta <- 3*data$m
-  num_param <- num_nu + num_sigma_z0_beta
+  num_sigma_z0 <- 2*data$m
+  num_param <- num_nu + num_sigma_z0
 
   return(num_param)
 }
@@ -676,8 +676,7 @@ get_initial_vals <- function(mod, data, pathfinder_init = NULL){
                                                          nu_A = rep(0,data$d_A),
                                                          nu_B = rep(0,data$d_B),
                                                          nu_C = rep(0,data$d_C),
-                                                         z0 = rep(0.1,data$m),
-                                                         beta = rep(0,data$m))}
+                                                         z0 = rep(0.1,data$m))}
 
   # tryCatch loop for initial value specification
   inits_list <- tryCatch(
@@ -698,8 +697,7 @@ get_initial_vals <- function(mod, data, pathfinder_init = NULL){
                                  nu_A = rep(0,data$d_A),
                                  nu_B = rep(0,data$d_B),
                                  nu_C = rep(0,data$d_C),
-                                 z0 = rep(0.1,data$m),
-                                 beta = rep(0,data$m)))
+                                 z0 = rep(0.1,data$m)))
       result_backup
     }
   )

@@ -88,19 +88,17 @@ test_that("get_last_draws_for_init extracts last draw by parameter prefix for on
       c(-10, -9),
       c(1.0, 1.1),
       c(1.5, 1.6),
-      c(0.1, 0.2),
       c(0.5, 0.6),
       check.names = FALSE
     ),
-    c(".chain", ".iteration", ".draw", "lp__", "sigma[1]", "sigma[2]", "beta[1]", "nu_A[1]")
+    c(".chain", ".iteration", ".draw", "lp__", "sigma[1]", "sigma[2]", "nu_A[1]")
   )
 
   result <- get_last_draws_for_init(draws)
 
   expect_true(is.list(result))
-  expect_named(result, c("sigma", "beta", "nu_A"))
+  expect_named(result, c("sigma", "nu_A"))
   expect_equal(result$sigma, c(1.1, 1.6))
-  expect_equal(result$beta, 0.2)
   expect_equal(result$nu_A, 0.6)
 })
 
@@ -114,19 +112,17 @@ test_that("get_pathfinder_init extracts last draw by parameter prefix for one ch
       c(-11, -10),
       c(1.0, 1.1),
       c(1.5, 1.6),
-      c(0.1, 0.2),
       c(0.5, 0.6),
       check.names = FALSE
     ),
-    c(".chain", ".iteration", ".draw", "lp__", "lp_approx__", "sigma[1]", "sigma[2]", "beta[1]", "nu_A[1]")
+    c(".chain", ".iteration", ".draw", "lp__", "lp_approx__", "sigma[1]", "sigma[2]", "nu_A[1]")
   )
 
   result <- get_pathfinder_init(draws)
 
   expect_true(is.list(result))
-  expect_named(result, c("sigma", "beta", "nu_A"))
+  expect_named(result, c("sigma", "nu_A"))
   expect_equal(result$sigma, c(1.1, 1.6))
-  expect_equal(result$beta, 0.2)
   expect_equal(result$nu_A, 0.6)
 })
 

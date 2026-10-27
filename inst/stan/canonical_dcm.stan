@@ -250,7 +250,6 @@ parameters {
   vector[d_B] nu_B; //parameter in A
   vector[d_C] nu_C; //parameter in C
   vector<lower=1e-3>[m] z0;    // initial condition to be inferred
-  vector[m] beta;
 }
 
 transformed parameters {
@@ -351,14 +350,13 @@ model {
 
   nu_C ~ normal(0,sigma_nu);
   z0 ~ normal(0,sigma_z0);
-  beta ~ normal(0, 1);
 
   }
   profile("likelihood"){
   // likelihood
 
   for (t in 1:T) {
-      y_obs[t] ~ normal(HRF_mu_v[t] + beta, sigma);
+      y_obs[t] ~ normal(HRF_mu_v[t], sigma);
   }
   }
 }

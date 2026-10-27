@@ -47,10 +47,6 @@ test_that("predict_cdcm returns expected structure and dimensions", {
     z0.1 = rep(0, n_draws),
     z0.2 = rep(0, n_draws),
 
-    # beta, length m
-    beta.1 = rep(1, n_draws),
-    beta.2 = rep(2, n_draws),
-
     .chain = rep(1, n_draws),
     .iteration = seq_len(n_draws),
     .draw = seq_len(n_draws)
@@ -115,9 +111,6 @@ test_that("predict_cdcm returns identifiability diagnostics and detects A4 failu
     # zero initial condition encourages A4 failure
     z0.1 = rep(0, n_draws),
     z0.2 = rep(0, n_draws),
-
-    beta.1 = rep(0, n_draws),
-    beta.2 = rep(0, n_draws),
 
     .chain = rep(1, n_draws),
     .iteration = seq_len(n_draws),
@@ -231,9 +224,6 @@ test_that("predict_cdcm returns identifiability diagnostics when all checks pass
     # nonzero initial condition to avoid trivial/collinear latent states
     z0.1 = rep(0.1, n_draws),
     z0.2 = rep(0.2, n_draws),
-
-    beta.1 = rep(0, n_draws),
-    beta.2 = rep(0, n_draws),
 
     .chain = rep(1, n_draws),
     .iteration = seq_len(n_draws),

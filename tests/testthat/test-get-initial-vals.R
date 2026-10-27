@@ -25,7 +25,6 @@ test_that("get_initial_vals returns backup values when pathfinder fails", {
   expect_equal(result[[1]]$nu_B, rep(0, 1))
   expect_equal(result[[1]]$nu_C, rep(0, 1))
   expect_equal(result[[1]]$z0, rep(0.1, 2))
-  expect_equal(result[[1]]$beta, rep(0, 2))
 })
 
 test_that("get_initial_vals fallback ignores custom pathfinder_init and uses backup defaults", {
@@ -47,8 +46,7 @@ test_that("get_initial_vals fallback ignores custom pathfinder_init and uses bac
     nu_A = c(8, 8),
     nu_B = 7,
     nu_C = 6,
-    z0 = c(5, 5),
-    beta = c(4, 4)
+    z0 = c(5, 5)
   )
 
   result <- get_initial_vals(fake_mod, toy_data, pathfinder_init = custom_init)
