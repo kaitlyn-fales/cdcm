@@ -353,9 +353,9 @@ model {
 
   }
   profile("likelihood"){
-    array[T] vector[m] e;                    // residual at each time point
-    vector[m] e_sum = rep_vector(0, m);      // running total per region
-    vector[m] e_bar;                         // average residual per region
+    array[T] vector[m] resid;                    // residual at each time point
+    vector[m] resid_sum = rep_vector(0, m);      // running total per region
+    vector[m] resid_bar;                         // average residual per region
 
     // get resid and running total
     for (t in 1:T) {
