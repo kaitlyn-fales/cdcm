@@ -353,12 +353,35 @@ model {
 
   }
   profile("likelihood"){
+    array[T] vector[m] e;                    // residual at each time point
+    vector[m] e_sum = rep_vector(0, m);      // running total per region
+    vector[m] e_bar;                         // average residual per region
+
+    // get resid and running total
+    for (t in 1:T) {
+      resid[t] = y_obs[t] - HRF_mu_v[t];
+      resid_sum = resid_sum + resid[t];
+    }
+
+    // turn each total into a regional average
+    for (i in 1:m) {
+      resid_bar[i] = resid_sum[i] / T;
+    }
+
+    // center residuals, specify normal likelihood
+    for (t in 1:T) {
+      vector[m] resid_centered = resid[t] - resid_bar;
+      resid_centered ~ normal(0, sigma);
+    }
+  }
+  // Old version with beta
+  //profile("likelihood"){
   // likelihood
 
-  for (t in 1:T) {
-      y_obs[t] ~ normal(HRF_mu_v[t], sigma);
-  }
-  }
+  //for (t in 1:T) {
+  //    y_obs[t] ~ normal(HRF_mu_v[t] + beta, sigma);
+  //}
+  //}
 }
 
 
