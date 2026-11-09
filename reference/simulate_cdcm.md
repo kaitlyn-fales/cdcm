@@ -17,7 +17,6 @@ simulate_cdcm(
   U,
   SNR,
   reparam = TRUE,
-  z0 = NULL,
   check_solution = TRUE,
   tol = 1e-04,
   seed = NULL,
@@ -95,10 +94,6 @@ simulate_cdcm(
 
   Logical. If `TRUE`, reparameterizes diagonal elements of the A matrix
   to enforce stability.
-
-- z0:
-
-  Optional initial state vector. If `NULL`, a default is used.
 
 - check_solution:
 

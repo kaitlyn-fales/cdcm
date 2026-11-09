@@ -14,7 +14,6 @@ get_stan_dat(
   sigma_nu = 1,
   sigma_nu_self = 0.125,
   rate_sigma = 0.5,
-  sigma_z0 = 0.3,
   conv = 1,
   max_num_steps = 10^6
 )
@@ -73,10 +72,6 @@ get_stan_dat(
 - rate_sigma:
 
   Rate parameter for the prior on observation noise.
-
-- sigma_z0:
-
-  Prior scale for the initial neural state.
 
 - conv:
 

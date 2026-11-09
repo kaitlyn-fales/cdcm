@@ -83,7 +83,9 @@ correspond to ROIs.</p></dd>
 <dt id="arg-block-indices">block_indices<a class="anchor" aria-label="anchor" href="#arg-block-indices"></a></dt>
 <dd><p>Optional integer vector giving the block indices to
 check. If <code>NULL</code>, all eligible blocks with at least \(d + 1\)
-observations are checked.</p></dd>
+observations are checked, except an opening rest block whose latent states
+are identically zero (as when the model starts at rest, \(z(0) = 0\)).
+Such a block carries no information and is not part of the selected set.</p></dd>
 
 
 <dt id="arg-tol">tol<a class="anchor" aria-label="anchor" href="#arg-tol"></a></dt>

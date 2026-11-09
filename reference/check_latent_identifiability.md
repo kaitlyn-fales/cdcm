@@ -45,7 +45,10 @@ check_latent_identifiability(
 - block_indices:
 
   Optional integer vector giving the block indices to check. If `NULL`,
-  all eligible blocks with at least \\d + 1\\ observations are checked.
+  all eligible blocks with at least \\d + 1\\ observations are checked,
+  except an opening rest block whose latent states are identically zero
+  (as when the model starts at rest, \\z(0) = 0\\). Such a block carries
+  no information and is not part of the selected set.
 
 - tol:
 
