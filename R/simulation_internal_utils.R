@@ -253,7 +253,7 @@ eval_u_b <- function(t, z0, A, B, C, input, prev_index, times){
 # Function to get piecewise analytic solution to ODE
 get_AnalyticSol <- function(input, changes, times, parms, m, v0 = NULL){
   # Get initial values if not specified
-  if (is.null(v0) == T) {v0 <- rep(0.1,m)}
+  if (is.null(v0) == T) {v0 <- rep(0,m)}
 
   # Matrix to store solution
   sol <- matrix(NA, nrow = length(times), ncol = m)
@@ -294,8 +294,15 @@ get_AnalyticSol <- function(input, changes, times, parms, m, v0 = NULL){
 HRF = function(t){stats::dgamma(x = t, shape = 6,rate = 1) - (1/6)*stats::dgamma(x = t,shape = 16,rate = 1)}
 
 # Function for convolving z with canonical HRF
+# HRF_mu = function(mu,tp){
+#   stats::convolve(mu, rev(HRF(tp)),type="open")[1:length(tp)]
+# }
+
+# Lags z by one TR so that mu(t_j) = sum_{i=1}^{j} h(t_i) z(t_{j-i}),
+# with z(t_0) = 0 (Eq. 3).
 HRF_mu = function(mu,tp){
-  stats::convolve(mu, rev(HRF(tp)),type="open")[1:length(tp)]
+  mu_lag <- c(0, mu[-length(mu)])
+  stats::convolve(mu_lag, rev(HRF(tp)),type="open")[1:length(tp)]
 }
 
 # Internal functions for random seeds

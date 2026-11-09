@@ -12,7 +12,6 @@ get_stan_dat(
   sigma_nu = 1,
   sigma_nu_self = 0.125,
   rate_sigma = 0.5,
-  sigma_z0 = 0.3,
   conv = 1,
   max_num_steps = 10^6
 )
@@ -51,8 +50,6 @@ tolerances (default = 1e-5; used for CKRK numeric integration).}
 \item{sigma_nu_self}{Prior scale for diagonal self-connectivity parameters (default = 0.125; tighter prior is needed).}
 
 \item{rate_sigma}{Rate parameter for the prior on observation noise.}
-
-\item{sigma_z0}{Prior scale for the initial neural state.}
 
 \item{conv}{Integer indicator controlling whether convolution with the HRF is
 performed in the Stan model (default = 1; leave as-is unless you want latent z(t) instead of y(t)).}

@@ -341,7 +341,6 @@ get_last_draws_for_init <- function(draws) {
 #' @param sigma_nu Prior scale for off-diagonal neural connectivity parameters (default = 1).
 #' @param sigma_nu_self Prior scale for diagonal self-connectivity parameters (default = 0.125; tighter prior is needed).
 #' @param rate_sigma Rate parameter for the prior on observation noise.
-#' @param sigma_z0 Prior scale for the initial neural state.
 #' @param conv Integer indicator controlling whether convolution with the HRF is
 #'   performed in the Stan model (default = 1; leave as-is unless you want latent z(t) instead of y(t)).
 #' @param max_num_steps Maximum number of ODE solver steps allowed (default = 10^6; CKRK numeric solver only).
@@ -374,7 +373,7 @@ get_last_draws_for_init <- function(draws) {
 #' @export
 get_stan_dat <- function(data, hypothesis_idxs, ode_solver_type = 1, tol = 1e-5,
                          sigma_nu = 1, sigma_nu_self = 0.125, rate_sigma = 0.5,
-                         sigma_z0 = 0.3, conv = 1, max_num_steps = 10^6){
+                         conv = 1, max_num_steps = 10^6){
   # Assumes input data object is list with following structure:
   #   times: T x 1 vector with the time index, separated by TR (seconds)
   #   u: T x n_u matrix encoding the timing of experimental stimuli
@@ -539,7 +538,6 @@ get_stan_dat <- function(data, hypothesis_idxs, ode_solver_type = 1, tol = 1e-5,
                        sigma_nu = sigma_nu,
                        sigma_nu_self = sigma_nu_self,
                        rate_sigma = rate_sigma,
-                       sigma_z0 = sigma_z0,
                        A_idxs = hypothesis_idxs$A_idxs,
                        B_idxs = hypothesis_idxs$B_idxs,
                        C_idxs = hypothesis_idxs$C_idxs,
@@ -570,8 +568,8 @@ get_num_param <- function(data){
   }
 
   num_nu <- data$d_A + data$d_B + data$d_C
-  num_sigma_z0_beta <- 3*data$m
-  num_param <- num_nu + num_sigma_z0_beta
+  num_sigma_beta <- 2*data$m
+  num_param <- num_nu + num_sigma_beta
 
   return(num_param)
 }
@@ -635,8 +633,7 @@ minESS_criterion <- function(data, alpha = 0.05, eps = 0.05){
 #' @details
 #' If \code{pathfinder_init} is not supplied, default initial values are used:
 #' observation noise parameters are initialized at 1, neural connectivity
-#' parameters are initialized at 0, initial neural states are initialized at
-#' 0.1, and hemodynamic scaling parameters are initialized at 0.
+#' parameters are initialized at 0, and intercept parameters are initialized at 0.
 #'
 #' The function then attempts to run CmdStanR Pathfinder and extract the final
 #' Pathfinder draw in a format suitable for posterior sampling. If Pathfinder
@@ -676,7 +673,6 @@ get_initial_vals <- function(mod, data, pathfinder_init = NULL){
                                                          nu_A = rep(0,data$d_A),
                                                          nu_B = rep(0,data$d_B),
                                                          nu_C = rep(0,data$d_C),
-                                                         z0 = rep(0.1,data$m),
                                                          beta = rep(0,data$m))}
 
   # tryCatch loop for initial value specification
@@ -691,14 +687,13 @@ get_initial_vals <- function(mod, data, pathfinder_init = NULL){
       result
     },
     error = function(e) {
-      # Initialize with 0 except for sigma and z0 if pathfinder fails for any reason
+      # Initialize with 0 except for sigma if pathfinder fails for any reason
       message("Pathfinder failed: ", e$message)
 
       result_backup <- list(list(sigma = rep(1,data$m),
                                  nu_A = rep(0,data$d_A),
                                  nu_B = rep(0,data$d_B),
                                  nu_C = rep(0,data$d_C),
-                                 z0 = rep(0.1,data$m),
                                  beta = rep(0,data$m)))
       result_backup
     }

@@ -16,7 +16,9 @@
 #'   correspond to ROIs.
 #' @param block_indices Optional integer vector giving the block indices to
 #'   check. If \code{NULL}, all eligible blocks with at least \eqn{d + 1}
-#'   observations are checked.
+#'   observations are checked, except an opening rest block whose latent states
+#'   are identically zero (as when the model starts at rest, \eqn{z(0) = 0}).
+#'   Such a block carries no information and is not part of the selected set.
 #' @param tol Numeric tolerance used for eigenvalue, rank, and determinant
 #'   checks. Defaults to \code{1e-8}.
 #' @param warn Logical; if \code{TRUE}, warnings are issued when diagnostics
@@ -139,6 +141,12 @@ check_latent_identifiability <- function(A, B, u, z,
 
   if (is.null(block_indices)) {
     block_indices <- which(block_lengths >= (d + 1))
+    # With z(0) = 0, an opening rest block has identically zero latent states,
+    # so it carries no information and is not part of the selected set B*.
+    first_block_z <- z[seq_len(block_lengths[1]), , drop = FALSE]
+    if (all(u[1, ] == 0) && all(abs(first_block_z) <= tol)) {
+      block_indices <- setdiff(block_indices, 1L)
+    }
   } else {
     if (!is.numeric(block_indices) || any(block_indices < 1) || any(block_indices > n_blocks)) {
       stop("`block_indices` must contain valid block indices.", call. = FALSE)

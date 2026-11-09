@@ -8,8 +8,8 @@ test_that("get_num_param returns correct number of parameters", {
 
   result <- get_num_param(toy_stan_dat)
 
-  # expected = 4 + 2 + 1 + 3*3 = 7 + 9 = 16
-  expect_equal(result, 16)
+  # expected = 4 + 2 + 1 + 2*3 = 7 + 9 = 16
+  expect_equal(result, 13)
 })
 
 test_that("get_num_param returns a scalar numeric value", {

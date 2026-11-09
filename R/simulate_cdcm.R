@@ -48,7 +48,6 @@
 #'
 #' @param reparam Logical. If `TRUE`, reparameterizes diagonal elements of the A matrix
 #'   to enforce stability.
-#' @param z0 Optional initial state vector. If `NULL`, a default is used.
 #' @param check_solution Logical. If `TRUE`, compares analytic and numeric ODE solutions
 #'   to assess numerical stability.
 #' @param tol Numeric tolerance for the analytic vs numeric solution comparison.
@@ -131,7 +130,7 @@
 #'
 #' @export
 simulate_cdcm <- function(nu, hypothesis_idxs, nscan, m, n_u, TR, U, SNR,
-                          reparam = TRUE, z0 = NULL, check_solution = TRUE, tol = 1e-4,
+                          reparam = TRUE, check_solution = TRUE, tol = 1e-4,
                           seed = NULL, check_identifiability = FALSE,
                           identifiability_tol = 1e-8) {
 
@@ -161,7 +160,7 @@ simulate_cdcm <- function(nu, hypothesis_idxs, nscan, m, n_u, TR, U, SNR,
   changes <- get_changepoints(input)
 
   # Running final function
-  analytic_sol <- get_AnalyticSol(input, changes, times, parms = paramMats, m = m, v0 = z0)
+  analytic_sol <- get_AnalyticSol(input, changes, times, parms = paramMats, m = m)
 
   # Optional check between analytic and numeric solution for stability
   if (check_solution) {

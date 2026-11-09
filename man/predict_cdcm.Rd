@@ -20,7 +20,7 @@ predict_cdcm(
 \item{draws_df}{Posterior draws data frame. The first column is assumed to be
 the log-posterior column, the last three columns are assumed to be draw
 metadata, and the parameter columns are assumed to be ordered as:
-noise standard deviations, \code{nu_A}, \code{nu_B}, \code{nu_C}, \code{z0}, and \code{beta}.}
+noise standard deviations, \code{nu_A}, \code{nu_B}, \code{nu_C}, and \code{beta}.}
 
 \item{hypothesis_idxs}{List of model index matrices containing \code{A_idxs},
 \code{B_idxs}, and \code{C_idxs}.}

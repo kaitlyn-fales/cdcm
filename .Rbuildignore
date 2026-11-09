@@ -6,3 +6,5 @@
 ^pkgdown$
 ^\.github$
 ^CITATION\.cff$
+^inst/stan/canonical_dcm$
+^inst/stan/meta_analysis$

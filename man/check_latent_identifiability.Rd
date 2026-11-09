@@ -31,7 +31,9 @@ correspond to ROIs.}
 
 \item{block_indices}{Optional integer vector giving the block indices to
 check. If \code{NULL}, all eligible blocks with at least \eqn{d + 1}
-observations are checked.}
+observations are checked, except an opening rest block whose latent states
+are identically zero (as when the model starts at rest, \eqn{z(0) = 0}).
+Such a block carries no information and is not part of the selected set.}
 
 \item{tol}{Numeric tolerance used for eigenvalue, rank, and determinant
 checks. Defaults to \code{1e-8}.}

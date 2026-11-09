@@ -29,8 +29,7 @@ CmdStanR Pathfinder to obtain data-informed initializations.
 \details{
 If \code{pathfinder_init} is not supplied, default initial values are used:
 observation noise parameters are initialized at 1, neural connectivity
-parameters are initialized at 0, initial neural states are initialized at
-0.1, and hemodynamic scaling parameters are initialized at 0.
+parameters are initialized at 0, and intercept parameters are initialized at 0.
 
 The function then attempts to run CmdStanR Pathfinder and extract the final
 Pathfinder draw in a format suitable for posterior sampling. If Pathfinder

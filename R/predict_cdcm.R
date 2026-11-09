@@ -3,7 +3,7 @@
 #' @param draws_df Posterior draws data frame. The first column is assumed to be
 #'   the log-posterior column, the last three columns are assumed to be draw
 #'   metadata, and the parameter columns are assumed to be ordered as:
-#'   noise standard deviations, `nu_A`, `nu_B`, `nu_C`, `z0`, and `beta`.
+#'   noise standard deviations, `nu_A`, `nu_B`, `nu_C`, and `beta`.
 #' @param hypothesis_idxs List of model index matrices containing `A_idxs`,
 #'   `B_idxs`, and `C_idxs`.
 #' @param nscan Number of scan time points.
@@ -32,10 +32,9 @@ predict_cdcm <- function(draws_df, hypothesis_idxs, nscan, m, n_u, TR, U,
   n_C <- nrow(hypothesis_idxs$C_idxs)
 
   n_noise <- m
-  n_z0 <- m
   n_beta <- m
 
-  n_param <- n_noise + n_A + n_B + n_C + n_z0 + n_beta
+  n_param <- n_noise + n_A + n_B + n_C + n_beta
 
   param_cols <- seq(2, ncol(draws_df) - 3)
 
@@ -54,8 +53,7 @@ predict_cdcm <- function(draws_df, hypothesis_idxs, nscan, m, n_u, TR, U,
   nu_A_cols <- seq(n_noise + 1, length.out = n_A)
   nu_B_cols <- seq(max(nu_A_cols) + 1, length.out = n_B)
   nu_C_cols <- seq(max(nu_B_cols) + 1, length.out = n_C)
-  z0_cols <- seq(max(nu_C_cols) + 1, length.out = n_z0)
-  beta_cols <- seq(max(z0_cols) + 1, length.out = n_beta)
+  beta_cols <- seq(max(nu_C_cols) + 1, length.out = n_beta)
 
   self_loop_idx <- which(hypothesis_idxs$A_idxs[, 1] == hypothesis_idxs$A_idxs[, 2])
 
@@ -70,7 +68,6 @@ predict_cdcm <- function(draws_df, hypothesis_idxs, nscan, m, n_u, TR, U,
   nu_A <- post_mean[nu_A_cols]
   nu_B <- post_mean[nu_B_cols]
   nu_C <- post_mean[nu_C_cols]
-  z0 <- post_mean[z0_cols]
   beta <- post_mean[beta_cols]
 
   nu <- list(
@@ -90,7 +87,6 @@ predict_cdcm <- function(draws_df, hypothesis_idxs, nscan, m, n_u, TR, U,
       U = U,
       SNR = 1,
       reparam = FALSE,
-      z0 = z0,
       check_solution = FALSE,
       seed = 1,
       check_identifiability = check_identifiability,

@@ -24,7 +24,7 @@ test_that("get_initial_vals returns backup values when pathfinder fails", {
   expect_equal(result[[1]]$nu_A, rep(0, 3))
   expect_equal(result[[1]]$nu_B, rep(0, 1))
   expect_equal(result[[1]]$nu_C, rep(0, 1))
-  expect_equal(result[[1]]$z0, rep(0.1, 2))
+  expect_null(result[[1]]$z0)
   expect_equal(result[[1]]$beta, rep(0, 2))
 })
 
@@ -47,7 +47,6 @@ test_that("get_initial_vals fallback ignores custom pathfinder_init and uses bac
     nu_A = c(8, 8),
     nu_B = 7,
     nu_C = 6,
-    z0 = c(5, 5),
     beta = c(4, 4)
   )
 
@@ -55,7 +54,7 @@ test_that("get_initial_vals fallback ignores custom pathfinder_init and uses bac
 
   expect_equal(result[[1]]$sigma, c(1, 1))
   expect_equal(result[[1]]$nu_A, c(0, 0))
-  expect_equal(result[[1]]$z0, c(0.1, 0.1))
+  expect_null(result[[1]]$z0)
 })
 
 test_that("get_initial_vals errors when required data components are missing", {

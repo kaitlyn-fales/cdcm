@@ -70,14 +70,46 @@ functions {
     return(out);
   }
 
-  array[] vector HRF_mu(array[] vector mu, vector tp)
+  // Original indexing
+  // array[] vector HRF_mu(array[] vector mu, vector tp)
+  // {
+  //   int m = num_elements(mu[1,]); // number of states
+  //   int T = num_elements(mu[,1]); // number of time points
+  //
+  //
+  //   vector[T] HRF_tp;
+  //   array[T] vector[m] HRF_mu_v;
+  //
+  //   // HRF(t) evaluated at t in ts
+  //   for (t in 1:T){
+  //     if(tp[t] == 0){
+  //       HRF_tp[t] = 0;
+  //     }else{
+  //       HRF_tp[t] = exp(gamma_lpdf(tp[t] | 6, 1)) - 0.166667*exp(gamma_lpdf(tp[t] | 16, 1));
+  //     }
+  //   }
+  //
+  //   for (i in 1:m){
+  //     HRF_mu_v[,i] = to_array_1d(stan_convolve(T, to_vector(mu[,i]), HRF_tp));
+  //   }
+  //   return HRF_mu_v;
+  // }
+
+    array[] vector HRF_mu(array[] vector mu, vector tp)
   {
     int m = num_elements(mu[1,]); // number of states
     int T = num_elements(mu[,1]); // number of time points
 
-
     vector[T] HRF_tp;
     array[T] vector[m] HRF_mu_v;
+    array[T] vector[m] mu_lag;
+
+    // Lag the latent sequence by one TR so that
+    // mu(t_j) = sum_{i=1}^{j} h(t_i) z(t_{j-i}), with z(t_0) = 0 (Eq. 3)
+    mu_lag[1] = rep_vector(0, m);
+    for (t in 2:T){
+      mu_lag[t] = mu[t-1];
+    }
 
     // HRF(t) evaluated at t in ts
     for (t in 1:T){
@@ -89,7 +121,7 @@ functions {
     }
 
     for (i in 1:m){
-      HRF_mu_v[,i] = to_array_1d(stan_convolve(T, to_vector(mu[,i]), HRF_tp));
+      HRF_mu_v[,i] = to_array_1d(stan_convolve(T, to_vector(mu_lag[,i]), HRF_tp));
     }
     return HRF_mu_v;
   }
@@ -232,7 +264,7 @@ data {
   int<lower = 0, upper = 1> conv; // whether the input is convolved with HRF
   real<lower = 1e-3> sigma_nu;
   real<lower = 1e-3> sigma_nu_self;
-  real<lower = 1e-3> sigma_z0;
+//  real<lower = 1e-3> sigma_z0;
   real<lower = 1e-3> rate_sigma;
   real rel_tol;
   real abs_tol;
@@ -242,6 +274,7 @@ data {
 
 transformed data {
   vector[T] tp_vec = to_vector(tp);
+  vector[m] z0 = rep_vector(0, m); // initial state fixed at rest, z(0) = 0
 }
 
 parameters {
@@ -249,7 +282,7 @@ parameters {
   vector[d_A] nu_A; //parameter in A
   vector[d_B] nu_B; //parameter in A
   vector[d_C] nu_C; //parameter in C
-  vector<lower=1e-3>[m] z0;    // initial condition to be inferred
+//  vector<lower=1e-3>[m] z0;    // initial condition to be inferred
   vector[m] beta;
 }
 
@@ -323,7 +356,6 @@ model {
   profile("prior"){
 
   sigma ~ exponential(rate_sigma);
-  nu_A ~ normal(0,sigma_nu);
 
   // A: Separate priors based on self connections or not
   for(i in 1:d_A){
@@ -350,7 +382,7 @@ model {
   }
 
   nu_C ~ normal(0,sigma_nu);
-  z0 ~ normal(0,sigma_z0);
+//  z0 ~ normal(0,sigma_z0);
   beta ~ normal(0, 1);
 
   }

@@ -1,2 +1,5 @@
 .Rproj.user
 docs
+inst/stan/canonical_dcm
+inst/stan/meta_analysis
+.Rhistory

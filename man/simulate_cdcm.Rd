@@ -14,7 +14,6 @@ simulate_cdcm(
   U,
   SNR,
   reparam = TRUE,
-  z0 = NULL,
   check_solution = TRUE,
   tol = 1e-04,
   seed = NULL,
@@ -62,8 +61,6 @@ Must be positive.}
 
 \item{reparam}{Logical. If \code{TRUE}, reparameterizes diagonal elements of the A matrix
 to enforce stability.}
-
-\item{z0}{Optional initial state vector. If \code{NULL}, a default is used.}
 
 \item{check_solution}{Logical. If \code{TRUE}, compares analytic and numeric ODE solutions
 to assess numerical stability.}
