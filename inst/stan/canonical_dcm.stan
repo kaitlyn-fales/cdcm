@@ -250,6 +250,7 @@ parameters {
   vector[d_B] nu_B; //parameter in A
   vector[d_C] nu_C; //parameter in C
   vector<lower=1e-3>[m] z0;    // initial condition to be inferred
+  vector[m] beta;
 }
 
 transformed parameters {
@@ -350,38 +351,16 @@ model {
 
   nu_C ~ normal(0,sigma_nu);
   z0 ~ normal(0,sigma_z0);
+  beta ~ normal(0, 1);
 
   }
   profile("likelihood"){
-    array[T] vector[m] resid;                    // residual at each time point
-    vector[m] resid_sum = rep_vector(0, m);      // running total per region
-    vector[m] resid_bar;                         // average residual per region
-
-    // get resid and running total
-    for (t in 1:T) {
-      resid[t] = y_obs[t] - HRF_mu_v[t];
-      resid_sum = resid_sum + resid[t];
-    }
-
-    // turn each total into a regional average
-    for (i in 1:m) {
-      resid_bar[i] = resid_sum[i] / T;
-    }
-
-    // center residuals, specify normal likelihood
-    for (t in 1:T) {
-      vector[m] resid_centered = resid[t] - resid_bar;
-      resid_centered ~ normal(0, sigma);
-    }
-  }
-  // Old version with beta
-  //profile("likelihood"){
   // likelihood
 
-  //for (t in 1:T) {
-  //    y_obs[t] ~ normal(HRF_mu_v[t] + beta, sigma);
-  //}
-  //}
+  for (t in 1:T) {
+      y_obs[t] ~ normal(HRF_mu_v[t] + beta, sigma);
+  }
+  }
 }
 
 

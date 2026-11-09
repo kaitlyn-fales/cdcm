@@ -309,13 +309,6 @@ get_last_draws_for_init <- function(draws) {
   return(grouped_list)
 }
 
-# Function to demean data y_obs
-demean_data <- function(x){
-  x_means <- colMeans(x)
-  x_demeaned <- sweep(x, MARGIN = 2, STATS = x_means, FUN = "-")
-  return(x_demeaned)
-}
-
 #' Construct a Stan data list for the CDCM model
 #'
 #' Prepares the input data and hypothesis indexing structures required by the
@@ -455,16 +448,6 @@ get_stan_dat <- function(data, hypothesis_idxs, ode_solver_type = 1, tol = 1e-5,
     }
   }
 
-  # Check if demeaned data y_obs and if not, demean it
-  mean_y_obs <- colMeans(y_obs)
-  if (any(abs(mean_y_obs) > 1e-8)) {
-    warning(
-      "`cdcm` assumes demeaned data, and `data$y_obs` is not. Returning demeaned `data$y_obs`.",
-      call. = FALSE
-    )
-    y_obs <- demean_data(y_obs)
-  }
-
   # Format checks for hypothesis_idxs
   if (!is.list(hypothesis_idxs)) {
     stop("`hypothesis_idxs` must be a list.", call. = FALSE)
@@ -587,8 +570,8 @@ get_num_param <- function(data){
   }
 
   num_nu <- data$d_A + data$d_B + data$d_C
-  num_sigma_z0 <- 2*data$m
-  num_param <- num_nu + num_sigma_z0
+  num_sigma_z0_beta <- 3*data$m
+  num_param <- num_nu + num_sigma_z0_beta
 
   return(num_param)
 }
@@ -693,7 +676,8 @@ get_initial_vals <- function(mod, data, pathfinder_init = NULL){
                                                          nu_A = rep(0,data$d_A),
                                                          nu_B = rep(0,data$d_B),
                                                          nu_C = rep(0,data$d_C),
-                                                         z0 = rep(0.1,data$m))}
+                                                         z0 = rep(0.1,data$m),
+                                                         beta = rep(0,data$m))}
 
   # tryCatch loop for initial value specification
   inits_list <- tryCatch(
@@ -714,7 +698,8 @@ get_initial_vals <- function(mod, data, pathfinder_init = NULL){
                                  nu_A = rep(0,data$d_A),
                                  nu_B = rep(0,data$d_B),
                                  nu_C = rep(0,data$d_C),
-                                 z0 = rep(0.1,data$m)))
+                                 z0 = rep(0.1,data$m),
+                                 beta = rep(0,data$m)))
       result_backup
     }
   )
