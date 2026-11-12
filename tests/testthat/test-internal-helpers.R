@@ -130,3 +130,28 @@ test_that("get_pathfinder_init extracts last draw by parameter prefix for one ch
   expect_equal(result$nu_A, 0.6)
 })
 
+test_that("get_AnalyticSol handles an input change at the final row", {
+  parms <- list(
+    A = matrix(c(-0.5, 0.2, 0, -0.5), 2, 2),
+    B = list(matrix(0, 2, 2)),
+    C = matrix(c(1, 0), 2, 1)
+  )
+  times <- 0:6
+
+  # Input switches on at the last row, so the terminal row is listed twice
+  input_end <- matrix(c(0, 1, 1, 0, 0, 0, 1), ncol = 1)
+  ch_end <- get_changepoints(input_end)
+  expect_equal(ch_end, c(2, 4, 7, 7))
+
+  # Same design without the final switch; the last-row input never acts on z,
+  # so the two solutions must agree
+  input_ref <- input_end
+  input_ref[7, 1] <- 0
+
+  sol_end <- get_AnalyticSol(input_end, ch_end, times, parms, m = 2)
+  sol_ref <- get_AnalyticSol(input_ref, get_changepoints(input_ref), times, parms, m = 2)
+
+  expect_true(all(is.finite(sol_end)))
+  expect_equal(sol_end, sol_ref)
+})
+

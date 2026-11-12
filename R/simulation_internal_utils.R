@@ -268,6 +268,10 @@ get_AnalyticSol <- function(input, changes, times, parms, m, v0 = NULL){
     # Denote index for which we will work up to
     index <- changes[i]
 
+    # Skip empty segments (input changes at the final row, so the terminal row
+    # is listed twice). Matches the empty loop in the Stan analytic_sol.
+    if (index <= prev_index) next
+
     # Update solution based on change_type
     if (sum(input[index-1,]) == 0){
       sol[(prev_index+1):index,] <- t(sapply((prev_index+1):index, eval_u_a,

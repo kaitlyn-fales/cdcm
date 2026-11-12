@@ -400,6 +400,11 @@ get_stan_dat <- function(data, hypothesis_idxs, ode_solver_type = 1, tol = 1e-5,
     )
   }
 
+  # Check that u are all binary
+  if (!all(data$u %in% c(0, 1))) {
+    stop("`u` must be binary (0/1).", call. = FALSE)
+  }
+
   # Extract components for readability
   times <- data$times
   u <- data$u
