@@ -12,6 +12,7 @@ check_latent_identifiability(
   B,
   u,
   z,
+  TR,
   block_indices = NULL,
   tol = 1e-08,
   warn = TRUE
@@ -41,6 +42,11 @@ check_latent_identifiability(
   A \\T \times d\\ numeric matrix of latent neural states evaluated at
   the observation times. Rows correspond to time points and columns
   correspond to ROIs.
+
+- TR:
+
+  Repetition time (seconds), the spacing \\r\\ of the observation times.
+  Sets the no-aliasing bound \\\pi / r\\ in A3.
 
 - block_indices:
 
@@ -93,13 +99,19 @@ summaries.
 For each checked block \\b\\, the function forms \$\$ \tilde A^{(b)} =
 A + \sum\_{i = 1}^m \tilde u_i^{(b)} B_i, \$\$ where \\\tilde u^{(b)}\\
 is the block-level stimulus vector, obtained from the first row of `u`
-within block \\b\\. Assumption A3 is checked by verifying that \\\tilde
-A^{(b)}\\ has real and distinct eigenvalues.
+within block \\b\\. Assumption A3 (no aliasing) is checked by verifying
+that every eigenvalue \\\lambda\\ of \\\tilde A^{(b)}\\ satisfies
+\\\|\mathrm{Im}(\lambda)\| \< \pi / r\\, where \\r\\ is the TR. Real
+eigenvalues always satisfy it. Whether the eigenvalues are real and
+distinct is also reported (`eig_real`, `eig_distinct`), since that case
+gives the unrestricted result.
 
 Assumption A4 is checked by constructing \$\$ X^{(b)} = \[x_0^{(b)},
 \ldots, x_d^{(b)}\], \qquad x_j^{(b)} = \[z(t^{(b)} + t_j)^T, 1\]^T,
 \$\$ from the first \\d + 1\\ latent observations in block \\b\\, and
-checking whether \\X^{(b)}\\ has full rank.
+checking whether \\X^{(b)}\\ has full rank. The 2-norm condition number
+of \\X^{(b)}\\ is reported as a scale-free measure of how close it is to
+singular.
 
 When used with posterior means from real data, these checks should be
 interpreted only as plug-in diagnostics conditional on the quality and

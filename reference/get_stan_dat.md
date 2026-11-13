@@ -11,7 +11,7 @@ get_stan_dat(
   hypothesis_idxs,
   ode_solver_type = 1,
   tol = 1e-05,
-  sigma_nu = 1,
+  sigma_nu = 0.5,
   sigma_nu_self = 0.125,
   rate_sigma = 0.5,
   conv = 1,
@@ -62,7 +62,7 @@ get_stan_dat(
 - sigma_nu:
 
   Prior scale for off-diagonal neural connectivity parameters (default =
-  1).
+  0.5).
 
 - sigma_nu_self:
 

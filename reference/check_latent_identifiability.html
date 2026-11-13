@@ -48,6 +48,7 @@ and the latent neural states.</p>
 <span>  <span class="va">B</span>,</span>
 <span>  <span class="va">u</span>,</span>
 <span>  <span class="va">z</span>,</span>
+<span>  <span class="va">TR</span>,</span>
 <span>  block_indices <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  tol <span class="op">=</span> <span class="fl">1e-08</span>,</span>
 <span>  warn <span class="op">=</span> <span class="cn">TRUE</span></span>
@@ -78,6 +79,11 @@ each observation time.</p></dd>
 <dd><p>A \(T \times d\) numeric matrix of latent neural states evaluated
 at the observation times. Rows correspond to time points and columns
 correspond to ROIs.</p></dd>
+
+
+<dt id="arg-tr">TR<a class="anchor" aria-label="anchor" href="#arg-tr"></a></dt>
+<dd><p>Repetition time (seconds), the spacing \(r\) of the observation
+times. Sets the no-aliasing bound \(\pi / r\) in A3.</p></dd>
 
 
 <dt id="arg-block-indices">block_indices<a class="anchor" aria-label="anchor" href="#arg-block-indices"></a></dt>
@@ -131,8 +137,12 @@ $$
   \tilde A^{(b)} = A + \sum_{i = 1}^m \tilde u_i^{(b)} B_i,
 $$
 where \(\tilde u^{(b)}\) is the block-level stimulus vector, obtained from
-the first row of <code>u</code> within block \(b\). Assumption A3 is checked by
-verifying that \(\tilde A^{(b)}\) has real and distinct eigenvalues.</p>
+the first row of <code>u</code> within block \(b\). Assumption A3 (no aliasing)
+is checked by verifying that every eigenvalue \(\lambda\) of
+\(\tilde A^{(b)}\) satisfies \(|\mathrm{Im}(\lambda)| &lt; \pi / r\),
+where \(r\) is the TR. Real eigenvalues always satisfy it. Whether the
+eigenvalues are real and distinct is also reported (<code>eig_real</code>,
+<code>eig_distinct</code>), since that case gives the unrestricted result.</p>
 <p>Assumption A4 is checked by constructing
 $$
   X^{(b)} = [x_0^{(b)}, \ldots, x_d^{(b)}],
@@ -140,7 +150,9 @@ $$
   x_j^{(b)} = [z(t^{(b)} + t_j)^T, 1]^T,
 $$
 from the first \(d + 1\) latent observations in block \(b\), and checking
-whether \(X^{(b)}\) has full rank.</p>
+whether \(X^{(b)}\) has full rank. The 2-norm condition number of
+\(X^{(b)}\) is reported as a scale-free measure of how close it is to
+singular.</p>
 <p>When used with posterior means from real data, these checks should be
 interpreted only as plug-in diagnostics conditional on the quality and
 convergence of the posterior fit.</p>
