@@ -15,7 +15,9 @@ get_stan_dat(
   sigma_nu_self = 0.125,
   rate_sigma = 0.5,
   conv = 1,
-  max_num_steps = 10^6
+  max_num_steps = 10^6,
+  ar1 = FALSE,
+  sigma_rho = 0.5
 )
 ```
 
@@ -83,6 +85,18 @@ get_stan_dat(
 
   Maximum number of ODE solver steps allowed (default = 10^6; CKRK
   numeric solver only).
+
+- ar1:
+
+  Logical; if `TRUE`, the errors in each region follow a stationary
+  AR(1) process with region-specific coefficient `rho`, and `sigma` is
+  the innovation standard deviation. If `FALSE` (default), errors are
+  independent over time.
+
+- sigma_rho:
+
+  Prior scale for the AR(1) coefficients, `rho ~ normal(0, sigma_rho)`
+  truncated to (-1, 1) (default = 0.5). Used only when `ar1 = TRUE`.
 
 ## Value
 

@@ -14,7 +14,8 @@ predict_cdcm(
   TR,
   U,
   check_identifiability = FALSE,
-  identifiability_tol = 1e-08
+  identifiability_tol = 1e-08,
+  ar1 = FALSE
 )
 ```
 
@@ -25,7 +26,8 @@ predict_cdcm(
   Posterior draws data frame. The first column is assumed to be the
   log-posterior column, the last three columns are assumed to be draw
   metadata, and the parameter columns are assumed to be ordered as:
-  noise standard deviations, `nu_A`, `nu_B`, `nu_C`, and `beta`.
+  noise standard deviations, `nu_A`, `nu_B`, `nu_C`, `beta`, and, if the
+  model was fit with AR(1) errors, `rho`.
 
 - hypothesis_idxs:
 
@@ -59,6 +61,12 @@ predict_cdcm(
 - identifiability_tol:
 
   Numeric tolerance for identifiability diagnostics.
+
+- ar1:
+
+  Logical; set to `TRUE` if the model was fit with AR(1) errors
+  (`get_stan_dat(..., ar1 = TRUE)`), so that `draws_df` contains `rho`.
+  The AR(1) errors do not change the predicted mean.
 
 ## Value
 

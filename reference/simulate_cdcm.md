@@ -21,7 +21,8 @@ simulate_cdcm(
   tol = 1e-04,
   seed = NULL,
   check_identifiability = FALSE,
-  identifiability_tol = 1e-08
+  identifiability_tol = 1e-08,
+  rho = 0
 )
 ```
 
@@ -123,6 +124,13 @@ simulate_cdcm(
 
   Numeric tolerance used for identifiability diagnostics when
   `check_identifiability = TRUE`. Defaults to `1e-8`.
+
+- rho:
+
+  AR(1) coefficient for the measurement noise, a single number or one
+  per region (length `m`), each in (-1, 1). Defaults to `0` (independent
+  noise). The noise is stationary, with marginal standard deviation
+  `sd(signal) / SNR` for any `rho`.
 
 ## Value
 

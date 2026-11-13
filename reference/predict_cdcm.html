@@ -46,7 +46,8 @@
 <span>  <span class="va">TR</span>,</span>
 <span>  <span class="va">U</span>,</span>
 <span>  check_identifiability <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  identifiability_tol <span class="op">=</span> <span class="fl">1e-08</span></span>
+<span>  identifiability_tol <span class="op">=</span> <span class="fl">1e-08</span>,</span>
+<span>  ar1 <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -58,7 +59,8 @@
 <dd><p>Posterior draws data frame. The first column is assumed to be
 the log-posterior column, the last three columns are assumed to be draw
 metadata, and the parameter columns are assumed to be ordered as:
-noise standard deviations, <code>nu_A</code>, <code>nu_B</code>, <code>nu_C</code>, and <code>beta</code>.</p></dd>
+noise standard deviations, <code>nu_A</code>, <code>nu_B</code>, <code>nu_C</code>, <code>beta</code>, and, if the
+model was fit with AR(1) errors, <code>rho</code>.</p></dd>
 
 
 <dt id="arg-hypothesis-idxs">hypothesis_idxs<a class="anchor" aria-label="anchor" href="#arg-hypothesis-idxs"></a></dt>
@@ -93,6 +95,12 @@ identifiability diagnostics.</p></dd>
 
 <dt id="arg-identifiability-tol">identifiability_tol<a class="anchor" aria-label="anchor" href="#arg-identifiability-tol"></a></dt>
 <dd><p>Numeric tolerance for identifiability diagnostics.</p></dd>
+
+
+<dt id="arg-ar-">ar1<a class="anchor" aria-label="anchor" href="#arg-ar-"></a></dt>
+<dd><p>Logical; set to <code>TRUE</code> if the model was fit with AR(1)
+errors (<code>get_stan_dat(..., ar1 = TRUE)</code>), so that <code>draws_df</code>
+contains <code>rho</code>. The AR(1) errors do not change the predicted mean.</p></dd>
 
 </dl></div>
     <div class="section level2">

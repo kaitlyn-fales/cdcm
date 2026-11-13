@@ -54,7 +54,8 @@ CDCM with user-specified connectivity parameters and experimental inputs.</p>
 <span>  tol <span class="op">=</span> <span class="fl">1e-04</span>,</span>
 <span>  seed <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  check_identifiability <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  identifiability_tol <span class="op">=</span> <span class="fl">1e-08</span></span>
+<span>  identifiability_tol <span class="op">=</span> <span class="fl">1e-08</span>,</span>
+<span>  rho <span class="op">=</span> <span class="fl">0</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -155,6 +156,13 @@ Defaults to <code>FALSE</code>.</p></dd>
 <dd><p>Numeric tolerance used for identifiability
 diagnostics when <code>check_identifiability = TRUE</code>. Defaults to
 <code>1e-8</code>.</p></dd>
+
+
+<dt id="arg-rho">rho<a class="anchor" aria-label="anchor" href="#arg-rho"></a></dt>
+<dd><p>AR(1) coefficient for the measurement noise, a single number or
+one per region (length <code>m</code>), each in (-1, 1). Defaults to <code>0</code>
+(independent noise). The noise is stationary, with marginal standard
+deviation <code>sd(signal) / SNR</code> for any <code>rho</code>.</p></dd>
 
 </dl></div>
     <div class="section level2">

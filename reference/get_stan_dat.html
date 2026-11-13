@@ -49,7 +49,9 @@ CDCM Stan program.</p>
 <span>  sigma_nu_self <span class="op">=</span> <span class="fl">0.125</span>,</span>
 <span>  rate_sigma <span class="op">=</span> <span class="fl">0.5</span>,</span>
 <span>  conv <span class="op">=</span> <span class="fl">1</span>,</span>
-<span>  max_num_steps <span class="op">=</span> <span class="fl">10</span><span class="op">^</span><span class="fl">6</span></span>
+<span>  max_num_steps <span class="op">=</span> <span class="fl">10</span><span class="op">^</span><span class="fl">6</span>,</span>
+<span>  ar1 <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  sigma_rho <span class="op">=</span> <span class="fl">0.5</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -108,6 +110,19 @@ performed in the Stan model (default = 1; leave as-is unless you want latent z(t
 
 <dt id="arg-max-num-steps">max_num_steps<a class="anchor" aria-label="anchor" href="#arg-max-num-steps"></a></dt>
 <dd><p>Maximum number of ODE solver steps allowed (default = 10^6; CKRK numeric solver only).</p></dd>
+
+
+<dt id="arg-ar-">ar1<a class="anchor" aria-label="anchor" href="#arg-ar-"></a></dt>
+<dd><p>Logical; if <code>TRUE</code>, the errors in each region follow a
+stationary AR(1) process with region-specific coefficient <code>rho</code>, and
+<code>sigma</code> is the innovation standard deviation. If <code>FALSE</code>
+(default), errors are independent over time.</p></dd>
+
+
+<dt id="arg-sigma-rho">sigma_rho<a class="anchor" aria-label="anchor" href="#arg-sigma-rho"></a></dt>
+<dd><p>Prior scale for the AR(1) coefficients,
+<code>rho ~ normal(0, sigma_rho)</code> truncated to (-1, 1) (default = 0.5).
+Used only when <code>ar1 = TRUE</code>.</p></dd>
 
 </dl></div>
     <div class="section level2">
