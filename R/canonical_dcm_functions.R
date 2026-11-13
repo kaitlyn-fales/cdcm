@@ -344,6 +344,13 @@ get_last_draws_for_init <- function(draws) {
 #' @param conv Integer indicator controlling whether convolution with the HRF is
 #'   performed in the Stan model (default = 1; leave as-is unless you want latent z(t) instead of y(t)).
 #' @param max_num_steps Maximum number of ODE solver steps allowed (default = 10^6; CKRK numeric solver only).
+#' @param ar1 Logical; if \code{TRUE}, the errors in each region follow a
+#'   stationary AR(1) process with region-specific coefficient \code{rho}, and
+#'   \code{sigma} is the innovation standard deviation. If \code{FALSE}
+#'   (default), errors are independent over time.
+#' @param sigma_rho Prior scale for the AR(1) coefficients,
+#'   \code{rho ~ normal(0, sigma_rho)} truncated to (-1, 1) (default = 0.5).
+#'   Used only when \code{ar1 = TRUE}.
 #'
 #' @details
 #' This function validates the structure of the supplied data and hypothesis
@@ -373,7 +380,8 @@ get_last_draws_for_init <- function(draws) {
 #' @export
 get_stan_dat <- function(data, hypothesis_idxs, ode_solver_type = 1, tol = 1e-5,
                          sigma_nu = 0.5, sigma_nu_self = 0.125, rate_sigma = 0.5,
-                         conv = 1, max_num_steps = 10^6){
+                         conv = 1, max_num_steps = 10^6,
+                         ar1 = FALSE, sigma_rho = 0.5){
   # Assumes input data object is list with following structure:
   #   times: T x 1 vector with the time index, separated by TR (seconds)
   #   u: T x n_u matrix encoding the timing of experimental stimuli
@@ -398,6 +406,14 @@ get_stan_dat <- function(data, hypothesis_idxs, ode_solver_type = 1, tol = 1e-5,
       paste(missing_data_names, collapse = ", "),
       call. = FALSE
     )
+  }
+
+  if (!is.logical(ar1) || length(ar1) != 1 || is.na(ar1)) {
+    stop("`ar1` must be TRUE or FALSE.", call. = FALSE)
+  }
+
+  if (!is.numeric(sigma_rho) || length(sigma_rho) != 1 || is.na(sigma_rho) || sigma_rho <= 0) {
+    stop("`sigma_rho` must be a single positive number.", call. = FALSE)
   }
 
   # Check that u are all binary
@@ -553,7 +569,9 @@ get_stan_dat <- function(data, hypothesis_idxs, ode_solver_type = 1, tol = 1e-5,
                        rel_tol = tol,
                        abs_tol = tol,
                        max_num_steps = max_num_steps,
-                       ode_solver_type = ode_solver_type))
+                       ode_solver_type = ode_solver_type,
+                       ar1 = as.integer(ar1),
+                       sigma_rho = sigma_rho))
 
   return(stan_dat)
 }
@@ -574,7 +592,8 @@ get_num_param <- function(data){
 
   num_nu <- data$d_A + data$d_B + data$d_C
   num_sigma_beta <- 2*data$m
-  num_param <- num_nu + num_sigma_beta
+  num_rho <- if (isTRUE(data$ar1 == 1)) data$m else 0
+  num_param <- num_nu + num_sigma_beta + num_rho
 
   return(num_param)
 }
@@ -674,11 +693,14 @@ get_initial_vals <- function(mod, data, pathfinder_init = NULL){
     )
   }
 
+  use_ar1 <- isTRUE(data$ar1 == 1)
+
   if (is.null(pathfinder_init)) {pathfinder_init <- list(sigma = rep(1,data$m),
                                                          nu_A = rep(0,data$d_A),
                                                          nu_B = rep(0,data$d_B),
                                                          nu_C = rep(0,data$d_C),
-                                                         beta = rep(0,data$m))}
+                                                         beta = rep(0,data$m))
+                                 if (use_ar1) pathfinder_init$rho <- rep(0, data$m)}
 
   # tryCatch loop for initial value specification
   inits_list <- tryCatch(
@@ -700,6 +722,7 @@ get_initial_vals <- function(mod, data, pathfinder_init = NULL){
                                  nu_B = rep(0,data$d_B),
                                  nu_C = rep(0,data$d_C),
                                  beta = rep(0,data$m)))
+      if (use_ar1) result_backup[[1]]$rho <- rep(0, data$m)
       result_backup
     }
   )

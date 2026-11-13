@@ -91,3 +91,16 @@ test_that("get_stan_dat errors when times are not positive", {
     "positive values"
   )
 })
+
+test_that("get_stan_dat passes the ar1 flag and sigma_rho", {
+  stan_dat <- suppressWarnings(get_stan_dat(toy_dat, toy_idxs))
+  expect_identical(stan_dat$ar1, 0L)
+  expect_equal(stan_dat$sigma_rho, 0.5)
+
+  stan_dat <- suppressWarnings(get_stan_dat(toy_dat, toy_idxs, ar1 = TRUE, sigma_rho = 0.3))
+  expect_identical(stan_dat$ar1, 1L)
+  expect_equal(stan_dat$sigma_rho, 0.3)
+
+  expect_error(get_stan_dat(toy_dat, toy_idxs, ar1 = 1), "`ar1` must be TRUE or FALSE.")
+  expect_error(get_stan_dat(toy_dat, toy_idxs, sigma_rho = 0), "`sigma_rho` must be")
+})

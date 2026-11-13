@@ -13,7 +13,9 @@ get_stan_dat(
   sigma_nu_self = 0.125,
   rate_sigma = 0.5,
   conv = 1,
-  max_num_steps = 10^6
+  max_num_steps = 10^6,
+  ar1 = FALSE,
+  sigma_rho = 0.5
 )
 }
 \arguments{
@@ -55,6 +57,15 @@ tolerances (default = 1e-5; used for CKRK numeric integration).}
 performed in the Stan model (default = 1; leave as-is unless you want latent z(t) instead of y(t)).}
 
 \item{max_num_steps}{Maximum number of ODE solver steps allowed (default = 10^6; CKRK numeric solver only).}
+
+\item{ar1}{Logical; if \code{TRUE}, the errors in each region follow a
+stationary AR(1) process with region-specific coefficient \code{rho}, and
+\code{sigma} is the innovation standard deviation. If \code{FALSE}
+(default), errors are independent over time.}
+
+\item{sigma_rho}{Prior scale for the AR(1) coefficients,
+\code{rho ~ normal(0, sigma_rho)} truncated to (-1, 1) (default = 0.5).
+Used only when \code{ar1 = TRUE}.}
 }
 \value{
 A named list containing the data, dimensions, changepoint structure,

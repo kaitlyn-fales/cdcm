@@ -75,3 +75,20 @@ test_that("get_initial_vals errors when required data components are missing", {
     "missing required component"
   )
 })
+
+test_that("get_initial_vals backup includes rho only when ar1 = 1", {
+  fake_mod <- list(
+    pathfinder = function(...) {
+      stop("simulated pathfinder failure")
+    }
+  )
+
+  toy_data <- list(m = 2, d_A = 3, d_B = 1, d_C = 1, ar1 = 1L)
+
+  result <- suppressMessages(get_initial_vals(fake_mod, toy_data))
+  expect_equal(result[[1]]$rho, rep(0, 2))
+
+  toy_data$ar1 <- 0L
+  result <- suppressMessages(get_initial_vals(fake_mod, toy_data))
+  expect_null(result[[1]]$rho)
+})

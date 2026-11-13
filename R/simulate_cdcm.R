@@ -46,6 +46,10 @@
 #'   \eqn{\sigma^2 = Var(signal) / SNR^2}.
 #'   Must be positive.
 #'
+#' @param rho AR(1) coefficient for the measurement noise, a single number or
+#'   one per region (length \code{m}), each in (-1, 1). Defaults to \code{0}
+#'   (independent noise). The noise is stationary, with marginal standard
+#'   deviation \code{sd(signal) / SNR} for any \code{rho}.
 #' @param reparam Logical. If `TRUE`, reparameterizes diagonal elements of the A matrix
 #'   to enforce stability.
 #' @param check_solution Logical. If `TRUE`, compares analytic and numeric ODE solutions
@@ -132,7 +136,8 @@
 simulate_cdcm <- function(nu, hypothesis_idxs, nscan, m, n_u, TR, U, SNR,
                           reparam = TRUE, check_solution = TRUE, tol = 1e-4,
                           seed = NULL, check_identifiability = FALSE,
-                          identifiability_tol = 1e-8) {
+                          identifiability_tol = 1e-8,
+                          rho = 0) {
 
   # Check inputs and modify as needed for simulation (creation of times, checking U, etc.)
   checked <- simulation_format_check(nu, hypothesis_idxs, nscan, m, n_u, TR, U)
@@ -144,6 +149,12 @@ simulate_cdcm <- function(nu, hypothesis_idxs, nscan, m, n_u, TR, U, SNR,
 
   if (length(SNR) != 1 || !is.numeric(SNR) || is.na(SNR) || SNR <= 0) {
     stop("`SNR` must be a single positive number.", call. = FALSE)
+  }
+
+  if (!is.numeric(rho) || !(length(rho) %in% c(1, m)) || any(is.na(rho)) ||
+      any(abs(rho) >= 1)) {
+    stop("`rho` must be a single number or length `m`, with values in (-1, 1).",
+         call. = FALSE)
   }
 
   ### Now that all inputs are checked, proceed with simulating data ###
@@ -200,7 +211,7 @@ simulate_cdcm <- function(nu, hypothesis_idxs, nscan, m, n_u, TR, U, SNR,
   )
 
   # Add Gaussian measurement noise according to specified SNR
-  y_obs <- add_noise(y_conv, times, SNR, seed = seed)
+  y_obs <- add_noise(y_conv, times, SNR, seed = seed, rho = rho)
 
   # Make simulated export objects
   simulated_data <- list(times = times[-1], u = input[-1, , drop = FALSE], y_obs = y_obs)

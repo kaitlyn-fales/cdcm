@@ -331,8 +331,13 @@ handle_seed <- function(seed, m) {
 }
 
 # Function for adding Gaussian noise at specified SNR to noiseless y(t)
-add_noise <- function(y_conv,times,SNR,seed = NULL){
+# rho: AR(1) coefficient for the noise (scalar or length m); rho = 0 gives
+# independent noise and reproduces the previous output exactly. The noise is
+# stationary with marginal sd = sd(signal) / SNR for any rho.
+add_noise <- function(y_conv,times,SNR,seed = NULL, rho = 0){
   m <- ncol(y_conv)
+  rho <- rep_len(rho, m)
+  n <- length(times) - 1
 
   # Seeds for reproducibility
   seed <- handle_seed(seed,m)
@@ -350,8 +355,16 @@ add_noise <- function(y_conv,times,SNR,seed = NULL){
     # SNR is defined as sd(signal) / sd(noise)
     variance[j] <- stats::var(y_conv[, j]) / SNR^2
 
-    y_obs[, j] <- y_conv[, j] +
-      stats::rnorm(length(times) - 1, mean = 0, sd = sqrt(variance[j]))
+    z <- stats::rnorm(n)
+    e <- numeric(n)
+    e[1] <- sqrt(variance[j]) * z[1]
+    if (n > 1) {
+      for (t in 2:n) {
+        e[t] <- rho[j] * e[t - 1] + sqrt(variance[j] * (1 - rho[j]^2)) * z[t]
+      }
+    }
+
+    y_obs[, j] <- y_conv[, j] + e
   }
   return(y_obs)
 }

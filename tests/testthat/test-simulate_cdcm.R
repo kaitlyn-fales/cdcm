@@ -391,3 +391,64 @@ test_that("add_noise is reproducible and returns expected dimensions", {
   expect_equal(dim(out1), c(10, 2))
   expect_equal(out1, out2)
 })
+
+test_that("add_noise with rho = 0 reproduces independent Gaussian noise", {
+  y_conv <- cbind(1:10, 11:20)
+  times <- 0:10
+
+  out <- add_noise(y_conv, times, SNR = 5, seed = 123, rho = 0)
+
+  expected <- y_conv
+  for (j in 1:2) {
+    set.seed(123)
+    expected[, j] <- y_conv[, j] +
+      stats::rnorm(10, mean = 0, sd = stats::sd(y_conv[, j]) / 5)
+  }
+
+  expect_equal(out, expected)
+  expect_equal(out, add_noise(y_conv, times, SNR = 5, seed = 123))
+})
+
+test_that("add_noise with rho > 0 gives AR(1) noise with the SNR-implied sd", {
+  n <- 20000
+  y_conv <- cbind(sin(seq_len(n) / 50), cos(seq_len(n) / 50))
+  times <- 0:n
+
+  out <- add_noise(y_conv, times, SNR = 2, seed = 1, rho = c(0.6, 0))
+  e <- out - y_conv
+
+  acf1 <- function(x) stats::acf(x, lag.max = 1, plot = FALSE)$acf[2]
+
+  expect_lt(abs(acf1(e[, 1]) - 0.6), 0.03)
+  expect_lt(abs(acf1(e[, 2])), 0.03)
+  # Marginal sd is set by SNR regardless of rho
+  expect_lt(abs(stats::sd(e[, 1]) / (stats::sd(y_conv[, 1]) / 2) - 1), 0.05)
+})
+
+test_that("simulate_cdcm errors for invalid rho", {
+  nu <- list(
+    nu_A = c(0.4, 0.3, -0.1, 0.15),
+    nu_B = c(-0.2),
+    nu_C = c(0.7)
+  )
+
+  hypothesis_idxs <- list(
+    A_idxs = matrix(c(2,1,
+                      1,2,
+                      1,1,
+                      2,2), byrow = TRUE, ncol = 2),
+    B_idxs = matrix(c(1,2,1), byrow = TRUE, ncol = 3),
+    C_idxs = matrix(c(1,1), byrow = TRUE, ncol = 2)
+  )
+
+  U <- matrix(c(rep(0, 5), rep(1, 5)), ncol = 1)
+
+  for (bad_rho in list(1, c(0.2, 0.3, 0.4), NA_real_)) {
+    expect_error(
+      simulate_cdcm(nu = nu, hypothesis_idxs = hypothesis_idxs, nscan = 10,
+                    m = 2, n_u = 1, TR = 2, U = U, SNR = 5,
+                    check_solution = FALSE, rho = bad_rho),
+      "`rho` must be"
+    )
+  }
+})

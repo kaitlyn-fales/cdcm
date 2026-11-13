@@ -3,7 +3,8 @@
 #' @param draws_df Posterior draws data frame. The first column is assumed to be
 #'   the log-posterior column, the last three columns are assumed to be draw
 #'   metadata, and the parameter columns are assumed to be ordered as:
-#'   noise standard deviations, `nu_A`, `nu_B`, `nu_C`, and `beta`.
+#'   noise standard deviations, `nu_A`, `nu_B`, `nu_C`, `beta`, and, if the
+#'   model was fit with AR(1) errors, `rho`.
 #' @param hypothesis_idxs List of model index matrices containing `A_idxs`,
 #'   `B_idxs`, and `C_idxs`.
 #' @param nscan Number of scan time points.
@@ -14,6 +15,9 @@
 #' @param check_identifiability Logical. If TRUE, runs post-fit plug-in
 #'   identifiability diagnostics.
 #' @param identifiability_tol Numeric tolerance for identifiability diagnostics.
+#' @param ar1 Logical; set to \code{TRUE} if the model was fit with AR(1)
+#'   errors (\code{get_stan_dat(..., ar1 = TRUE)}), so that \code{draws_df}
+#'   contains \code{rho}. The AR(1) errors do not change the predicted mean.
 #'
 #' @return A list containing predicted latent states and predicted BOLD signal,
 #' and optional identifiability check.
@@ -21,7 +25,8 @@
 #' @export
 predict_cdcm <- function(draws_df, hypothesis_idxs, nscan, m, n_u, TR, U,
                          check_identifiability = FALSE,
-                         identifiability_tol = 1e-8) {
+                         identifiability_tol = 1e-8,
+                         ar1 = FALSE) {
 
   if (!is.data.frame(draws_df)) {
     stop("`draws_df` must be a data frame.", call. = FALSE)
@@ -33,15 +38,16 @@ predict_cdcm <- function(draws_df, hypothesis_idxs, nscan, m, n_u, TR, U,
 
   n_noise <- m
   n_beta <- m
+  n_rho <- if (isTRUE(ar1)) m else 0
 
-  n_param <- n_noise + n_A + n_B + n_C + n_beta
+  n_param <- n_noise + n_A + n_B + n_C + n_beta + n_rho
 
   param_cols <- seq(2, ncol(draws_df) - 3)
 
   if (length(param_cols) != n_param) {
     stop(
       "The number of parameter columns in `draws_df` does not match the expected ",
-      "number based on `m` and `hypothesis_idxs`.",
+      "number based on `m`, `hypothesis_idxs` and `ar1`.",
       call. = FALSE
     )
   }

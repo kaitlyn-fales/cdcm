@@ -18,7 +18,8 @@ simulate_cdcm(
   tol = 1e-04,
   seed = NULL,
   check_identifiability = FALSE,
-  identifiability_tol = 1e-08
+  identifiability_tol = 1e-08,
+  rho = 0
 )
 }
 \arguments{
@@ -78,6 +79,11 @@ Defaults to \code{FALSE}.}
 \item{identifiability_tol}{Numeric tolerance used for identifiability
 diagnostics when \code{check_identifiability = TRUE}. Defaults to
 \code{1e-8}.}
+
+\item{rho}{AR(1) coefficient for the measurement noise, a single number or
+one per region (length \code{m}), each in (-1, 1). Defaults to \code{0}
+(independent noise). The noise is stationary, with marginal standard
+deviation \code{sd(signal) / SNR} for any \code{rho}.}
 }
 \value{
 A list with two components:

@@ -261,3 +261,40 @@ test_that("predict_cdcm returns identifiability diagnostics when all checks pass
   expect_true(out$identifiability$latent$cond_A4)
   expect_true(out$identifiability$latent$all_ok)
 })
+
+test_that("predict_cdcm handles rho columns when ar1 = TRUE", {
+  hypothesis_idxs <- list(
+    A_idxs = matrix(c(1, 1, 2, 2, 2, 1), ncol = 2, byrow = TRUE),
+    B_idxs = matrix(c(1, 2, 1), ncol = 3, byrow = TRUE),
+    C_idxs = matrix(c(1, 1), ncol = 2, byrow = TRUE)
+  )
+  U <- matrix(c(rep(0, 6), rep(1, 6)), ncol = 1)
+  n_draws <- 20
+
+  base <- data.frame(
+    lp__ = rnorm(n_draws),
+    sigma.1 = rep(0.1, n_draws), sigma.2 = rep(0.1, n_draws),
+    nu_A.1 = rep(0, n_draws), nu_A.2 = rep(log(2), n_draws), nu_A.3 = rep(0.2, n_draws),
+    nu_B.1 = rep(0.1, n_draws),
+    nu_C.1 = rep(0.5, n_draws),
+    beta.1 = rep(1, n_draws), beta.2 = rep(2, n_draws)
+  )
+  meta <- data.frame(.chain = rep(1, n_draws), .iteration = seq_len(n_draws), .draw = seq_len(n_draws))
+  rho <- data.frame(rho.1 = rep(0.4, n_draws), rho.2 = rep(0.1, n_draws))
+
+  draws_ar1 <- posterior::as_draws_df(cbind(base, rho, meta))
+  draws_iid <- posterior::as_draws_df(cbind(base, meta))
+
+  args <- list(hypothesis_idxs = hypothesis_idxs,
+               nscan = 12, m = 2, n_u = 1, TR = 2, U = U)
+
+  out_ar1 <- do.call(predict_cdcm, c(list(draws_df = draws_ar1), args, ar1 = TRUE))
+  expect_equal(dim(out_ar1$y_pred), c(12, 2))
+
+  # AR(1) errors do not change the predicted mean
+  out_iid <- do.call(predict_cdcm, c(list(draws_df = draws_iid), args))
+  expect_equal(out_ar1$y_pred, out_iid$y_pred)
+
+  # rho columns present but ar1 not set: count check catches it
+  expect_error(do.call(predict_cdcm, c(list(draws_df = draws_ar1), args)), "does not match the expected")
+})

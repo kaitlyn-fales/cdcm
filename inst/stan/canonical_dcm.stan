@@ -270,6 +270,8 @@ data {
   real abs_tol;
   int max_num_steps;
   int<lower =0, upper =1> ode_solver_type;
+  int<lower = 0, upper = 1> ar1; // 1 = AR(1) errors within each region, 0 = independent errors
+  real<lower = 1e-3> sigma_rho; // prior scale for the AR(1) coefficients (used only if ar1 == 1)
 }
 
 transformed data {
@@ -284,6 +286,7 @@ parameters {
   vector[d_C] nu_C; //parameter in C
 //  vector<lower=1e-3>[m] z0;    // initial condition to be inferred
   vector[m] beta;
+  vector<lower=-1, upper=1>[ar1 == 1 ? m : 0] rho; // AR(1) coefficients (empty if ar1 == 0)
 }
 
 transformed parameters {
@@ -384,13 +387,28 @@ model {
   nu_C ~ normal(0,sigma_nu);
 //  z0 ~ normal(0,sigma_z0);
   beta ~ normal(0, 1);
+  rho ~ normal(0, sigma_rho); // no-op when ar1 == 0 (rho has size 0)
 
   }
   profile("likelihood"){
   // likelihood
 
-  for (t in 1:T) {
+  if (ar1 == 0) {
+    for (t in 1:T) {
       y_obs[t] ~ normal(HRF_mu_v[t] + beta, sigma);
+    }
+  } else {
+    // Exact stationary AR(1) likelihood, separately for each region:
+    // e[1] ~ N(0, sigma / sqrt(1 - rho^2)), then e[t] - rho * e[t-1] ~ N(0, sigma).
+    // sigma is the innovation SD; the marginal SD is sigma / sqrt(1 - rho^2).
+    vector[m] sigma_vec = to_vector(sigma);
+    vector[m] e_prev = y_obs[1] - HRF_mu_v[1] - beta;
+    target += normal_lpdf(e_prev | 0, sigma_vec ./ sqrt(1 - square(rho)));
+    for (t in 2:T) {
+      vector[m] e = y_obs[t] - HRF_mu_v[t] - beta;
+      target += normal_lpdf(e - rho .* e_prev | 0, sigma_vec);
+      e_prev = e;
+    }
   }
   }
 }

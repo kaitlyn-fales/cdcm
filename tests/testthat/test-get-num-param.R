@@ -34,3 +34,11 @@ test_that("get_num_param errors with informative message when fields missing", {
     "missing required component"
   )
 })
+
+test_that("get_num_param counts rho when ar1 = 1", {
+  toy_stan_dat <- list(d_A = 4, d_B = 2, d_C = 1, m = 3, ar1 = 1L)
+  expect_equal(get_num_param(toy_stan_dat), 16)
+
+  toy_stan_dat$ar1 <- 0L
+  expect_equal(get_num_param(toy_stan_dat), 13)
+})
