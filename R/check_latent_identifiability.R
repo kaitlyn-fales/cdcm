@@ -19,6 +19,8 @@
 #'   observations are checked, except an opening rest block whose latent states
 #'   are identically zero (as when the model starts at rest, \eqn{z(0) = 0}).
 #'   Such a block carries no information and is not part of the selected set.
+#' @param TR Repetition time (seconds), the spacing \eqn{r} of the observation
+#'   times. Sets the no-aliasing bound \eqn{\pi / r} in A3.
 #' @param tol Numeric tolerance used for eigenvalue, rank, and determinant
 #'   checks. Defaults to \code{1e-8}.
 #' @param warn Logical; if \code{TRUE}, warnings are issued when diagnostics
@@ -37,8 +39,12 @@
 #'   \tilde A^{(b)} = A + \sum_{i = 1}^m \tilde u_i^{(b)} B_i,
 #' }
 #' where \eqn{\tilde u^{(b)}} is the block-level stimulus vector, obtained from
-#' the first row of \code{u} within block \eqn{b}. Assumption A3 is checked by
-#' verifying that \eqn{\tilde A^{(b)}} has real and distinct eigenvalues.
+#' the first row of \code{u} within block \eqn{b}. Assumption A3 (no aliasing)
+#' is checked by verifying that every eigenvalue \eqn{\lambda} of
+#' \eqn{\tilde A^{(b)}} satisfies \eqn{|\mathrm{Im}(\lambda)| < \pi / r},
+#' where \eqn{r} is the TR. Real eigenvalues always satisfy it. Whether the
+#' eigenvalues are real and distinct is also reported (\code{eig_real},
+#' \code{eig_distinct}), since that case gives the unrestricted result.
 #'
 #' Assumption A4 is checked by constructing
 #' \deqn{
@@ -47,7 +53,9 @@
 #'   x_j^{(b)} = [z(t^{(b)} + t_j)^T, 1]^T,
 #' }
 #' from the first \eqn{d + 1} latent observations in block \eqn{b}, and checking
-#' whether \eqn{X^{(b)}} has full rank.
+#' whether \eqn{X^{(b)}} has full rank. The 2-norm condition number of
+#' \eqn{X^{(b)}} is reported as a scale-free measure of how close it is to
+#' singular.
 #'
 #' When used with posterior means from real data, these checks should be
 #' interpreted only as plug-in diagnostics conditional on the quality and
@@ -66,7 +74,7 @@
 #' }
 #'
 #' @export
-check_latent_identifiability <- function(A, B, u, z,
+check_latent_identifiability <- function(A, B, u, z, TR,
                                          block_indices = NULL,
                                          tol = 1e-8,
                                          warn = TRUE) {
@@ -89,6 +97,10 @@ check_latent_identifiability <- function(A, B, u, z,
 
   if (!is.matrix(z) || !is.numeric(z)) {
     stop("`z` must be a numeric matrix.", call. = FALSE)
+  }
+
+  if (!is.numeric(TR) || length(TR) != 1 || is.na(TR) || TR <= 0) {
+    stop("`TR` must be a single positive number.", call. = FALSE)
   }
 
   if (!is.numeric(tol) || length(tol) != 1 || tol <= 0) {
@@ -171,20 +183,21 @@ check_latent_identifiability <- function(A, B, u, z,
     eig <- eigen(A_tilde, only.values = TRUE)$values
 
     eig_real <- all(abs(Im(eig)) <= tol)
-    eig_values_real_part <- Re(eig)
 
-    eig_diffs <- abs(
-      outer(eig_values_real_part, eig_values_real_part, "-")
-    )
+    # Distances between eigenvalues as complex numbers (a conjugate pair is distinct)
+    eig_diffs <- Mod(outer(eig, eig, "-"))
 
-    min_eig_diff <- if (length(eig_values_real_part) > 1) {
+    min_eig_diff <- if (length(eig) > 1) {
       min(eig_diffs[upper.tri(eig_diffs)])
     } else {
       Inf
     }
 
     eig_distinct <- min_eig_diff > tol
-    cond_A3_block <- eig_real && eig_distinct
+
+    # A3 (no aliasing): |Im(lambda)| < pi / TR for every eigenvalue
+    max_abs_im <- max(abs(Im(eig)))
+    cond_A3_block <- max_abs_im < pi / TR
 
     z_block <- z[
       block_starts[b]:(block_starts[b] + d),
@@ -195,6 +208,7 @@ check_latent_identifiability <- function(A, B, u, z,
     X_b <- rbind(t(z_block), rep(1, d + 1))
     rank_X_b <- qr(X_b, tol = tol)$rank
     det_X_b <- det(X_b)
+    cond_num_X_b <- if (rank_X_b == (d + 1)) kappa(X_b, exact = TRUE) else Inf
 
     cond_A4_block <- rank_X_b == (d + 1)
 
@@ -205,8 +219,11 @@ check_latent_identifiability <- function(A, B, u, z,
       eig_real = eig_real,
       eig_distinct = eig_distinct,
       min_eig_diff = min_eig_diff,
+      max_abs_im = max_abs_im,
+      aliasing_bound = pi / TR,
       rank_X = rank_X_b,
       det_X = det_X_b,
+      cond_num_X = cond_num_X_b,
       cond_A3 = cond_A3_block,
       cond_A4 = cond_A4_block
     )
@@ -221,7 +238,7 @@ check_latent_identifiability <- function(A, B, u, z,
   if (warn) {
     if (!cond_A3) {
       warning(
-        "A3 failed: at least one checked block has an effective connectivity matrix without distinct real eigenvalues.",
+        "A3 failed: at least one checked block has an effective connectivity matrix with an eigenvalue whose imaginary part is at least pi / TR (aliasing).",
         call. = FALSE
       )
     }

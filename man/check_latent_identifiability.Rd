@@ -9,6 +9,7 @@ check_latent_identifiability(
   B,
   u,
   z,
+  TR,
   block_indices = NULL,
   tol = 1e-08,
   warn = TRUE
@@ -28,6 +29,9 @@ each observation time.}
 \item{z}{A \eqn{T \times d} numeric matrix of latent neural states evaluated
 at the observation times. Rows correspond to time points and columns
 correspond to ROIs.}
+
+\item{TR}{Repetition time (seconds), the spacing \eqn{r} of the observation
+times. Sets the no-aliasing bound \eqn{\pi / r} in A3.}
 
 \item{block_indices}{Optional integer vector giving the block indices to
 check. If \code{NULL}, all eligible blocks with at least \eqn{d + 1}
@@ -72,8 +76,12 @@ For each checked block \eqn{b}, the function forms
   \tilde A^{(b)} = A + \sum_{i = 1}^m \tilde u_i^{(b)} B_i,
 }
 where \eqn{\tilde u^{(b)}} is the block-level stimulus vector, obtained from
-the first row of \code{u} within block \eqn{b}. Assumption A3 is checked by
-verifying that \eqn{\tilde A^{(b)}} has real and distinct eigenvalues.
+the first row of \code{u} within block \eqn{b}. Assumption A3 (no aliasing)
+is checked by verifying that every eigenvalue \eqn{\lambda} of
+\eqn{\tilde A^{(b)}} satisfies \eqn{|\mathrm{Im}(\lambda)| < \pi / r},
+where \eqn{r} is the TR. Real eigenvalues always satisfy it. Whether the
+eigenvalues are real and distinct is also reported (\code{eig_real},
+\code{eig_distinct}), since that case gives the unrestricted result.
 
 Assumption A4 is checked by constructing
 \deqn{
@@ -82,7 +90,9 @@ Assumption A4 is checked by constructing
   x_j^{(b)} = [z(t^{(b)} + t_j)^T, 1]^T,
 }
 from the first \eqn{d + 1} latent observations in block \eqn{b}, and checking
-whether \eqn{X^{(b)}} has full rank.
+whether \eqn{X^{(b)}} has full rank. The 2-norm condition number of
+\eqn{X^{(b)}} is reported as a scale-free measure of how close it is to
+singular.
 
 When used with posterior means from real data, these checks should be
 interpreted only as plug-in diagnostics conditional on the quality and

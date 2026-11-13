@@ -9,7 +9,7 @@ get_stan_dat(
   hypothesis_idxs,
   ode_solver_type = 1,
   tol = 1e-05,
-  sigma_nu = 1,
+  sigma_nu = 0.5,
   sigma_nu_self = 0.125,
   rate_sigma = 0.5,
   conv = 1,
@@ -45,7 +45,7 @@ Stan program (default = 1; piecewise analytic solution, faster than CKRK numeric
 \item{tol}{Numeric tolerance used for both relative and absolute ODE solver
 tolerances (default = 1e-5; used for CKRK numeric integration).}
 
-\item{sigma_nu}{Prior scale for off-diagonal neural connectivity parameters (default = 1).}
+\item{sigma_nu}{Prior scale for off-diagonal neural connectivity parameters (default = 0.5).}
 
 \item{sigma_nu_self}{Prior scale for diagonal self-connectivity parameters (default = 0.125; tighter prior is needed).}
 

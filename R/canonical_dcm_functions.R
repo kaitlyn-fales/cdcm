@@ -338,7 +338,7 @@ get_last_draws_for_init <- function(draws) {
 #'   Stan program (default = 1; piecewise analytic solution, faster than CKRK numeric integration = 0).
 #' @param tol Numeric tolerance used for both relative and absolute ODE solver
 #'   tolerances (default = 1e-5; used for CKRK numeric integration).
-#' @param sigma_nu Prior scale for off-diagonal neural connectivity parameters (default = 1).
+#' @param sigma_nu Prior scale for off-diagonal neural connectivity parameters (default = 0.5).
 #' @param sigma_nu_self Prior scale for diagonal self-connectivity parameters (default = 0.125; tighter prior is needed).
 #' @param rate_sigma Rate parameter for the prior on observation noise.
 #' @param conv Integer indicator controlling whether convolution with the HRF is
@@ -372,7 +372,7 @@ get_last_draws_for_init <- function(draws) {
 #'
 #' @export
 get_stan_dat <- function(data, hypothesis_idxs, ode_solver_type = 1, tol = 1e-5,
-                         sigma_nu = 1, sigma_nu_self = 0.125, rate_sigma = 0.5,
+                         sigma_nu = 0.5, sigma_nu_self = 0.125, rate_sigma = 0.5,
                          conv = 1, max_num_steps = 10^6){
   # Assumes input data object is list with following structure:
   #   times: T x 1 vector with the time index, separated by TR (seconds)

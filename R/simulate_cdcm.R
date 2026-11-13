@@ -221,6 +221,7 @@ simulate_cdcm <- function(nu, hypothesis_idxs, nscan, m, n_u, TR, U, SNR,
       B = paramMats$B,
       u = simulated_data$u,
       z = true_signals$z_signal,
+      TR = TR,
       tol = identifiability_tol,
       warn = TRUE
     )

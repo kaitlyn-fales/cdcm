@@ -218,7 +218,7 @@ test_that("check_latent_identifiability passes for a simple identifiable case", 
     byrow = TRUE
   )
 
-  result <- check_latent_identifiability(A, B, u, z, warn = FALSE)
+  result <- check_latent_identifiability(A, B, u, z, TR = 1, warn = FALSE)
 
   expect_true(result$cond_A3)
   expect_true(result$cond_A4)
@@ -226,7 +226,7 @@ test_that("check_latent_identifiability passes for a simple identifiable case", 
   expect_true(is.data.frame(result$block_results))
 })
 
-test_that("check_latent_identifiability detects repeated eigenvalues", {
+test_that("check_latent_identifiability allows repeated real eigenvalues but reports them", {
   A <- diag(c(-0.5, -0.5))
   B <- list(matrix(0, nrow = 2, ncol = 2))
 
@@ -237,16 +237,48 @@ test_that("check_latent_identifiability detects repeated eigenvalues", {
       1, 0,
       0, 1),
     ncol = 2,
-
-
     byrow = TRUE
   )
 
-  result <- check_latent_identifiability(A, B, u, z, warn = FALSE)
+  result <- check_latent_identifiability(A, B, u, z, TR = 1, warn = FALSE)
 
-  expect_false(result$cond_A3)
+  expect_true(result$cond_A3)
+  expect_false(result$block_results$eig_distinct)
   expect_true(result$cond_A4)
-  expect_false(result$all_ok)
+})
+
+test_that("check_latent_identifiability A3 uses the no-aliasing bound pi / TR", {
+  # Eigenvalues -0.5 +/- 1i
+  A <- matrix(c(-0.5, 1,
+                -1, -0.5), nrow = 2, byrow = TRUE)
+  B <- list(matrix(0, nrow = 2, ncol = 2))
+
+  u <- matrix(rep(0, 3), ncol = 1)
+
+  z <- matrix(
+    c(0, 0,
+      1, 0,
+      0, 1),
+    ncol = 2,
+    byrow = TRUE
+  )
+
+  # pi / 3 > 1: passes, though eigenvalues are complex
+  ok <- check_latent_identifiability(A, B, u, z, TR = 3, warn = FALSE)
+  expect_true(ok$cond_A3)
+  expect_false(ok$block_results$eig_real)
+  expect_true(ok$block_results$eig_distinct)
+  expect_equal(ok$block_results$max_abs_im, 1)
+
+  # pi / 4 < 1: aliasing, fails
+  bad <- check_latent_identifiability(A, B, u, z, TR = 4, warn = FALSE)
+  expect_false(bad$cond_A3)
+  expect_false(bad$all_ok)
+
+  expect_error(
+    check_latent_identifiability(A, B, u, z, TR = -1, warn = FALSE),
+    "`TR` must be a single positive number."
+  )
 })
 
 test_that("check_latent_identifiability detects non-invertible latent data matrix", {
@@ -265,7 +297,7 @@ test_that("check_latent_identifiability detects non-invertible latent data matri
     byrow = TRUE
   )
 
-  result <- check_latent_identifiability(A, B, u, z, warn = FALSE)
+  result <- check_latent_identifiability(A, B, u, z, TR = 1, warn = FALSE)
 
   expect_true(result$cond_A3)
   expect_false(result$cond_A4)
